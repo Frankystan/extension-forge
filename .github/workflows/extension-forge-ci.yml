@@ -10,6 +10,9 @@ jobs:
   validate-and-build:
     name: Build & Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      # $env:TEMP no existe en Linux; los tests y el paso Initialize lo usan
+      TEMP: ${{ runner.temp }}
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       - name: 💻 Setup PowerShell
         shell: pwsh
@@ -52,14 +54,14 @@ jobs:
             exit 1
           }
 
-      - name: 🏗️ Test Action: Doctor
+      - name: "🏗️ Test Action: Doctor"
         shell: pwsh
         run: |
           Import-Module ./src/ExtensionForge/ExtensionForge.psd1 -Force
           $ok = Test-ExtensionForgeDoctor -WorkspacePath $PWD
           if (-not $ok) { exit 1 }
 
-      - name: 🏗️ Test Action: Initialize (Dry-Run / Scaffold)
+      - name: "🏗️ Test Action: Initialize (Dry-Run / Scaffold)"
         shell: pwsh
         run: |
           Import-Module ./src/ExtensionForge/ExtensionForge.psd1 -Force
