@@ -3,7 +3,7 @@
     Genera dinámicamente un manifest.json (Manifest V3) específico por navegador.
 .DESCRIPTION
     Chrome  : background.service_worker = "background.js" (type module) + action.
-    Firefox : background.scripts = ["background.js"] + browser_action + browser_specific_settings (gecko).
+    Firefox : background.scripts = ["background.js"] + action + browser_specific_settings (gecko).
 #>
 function New-ExtensionForgeManifest {
     [CmdletBinding()]
@@ -30,7 +30,7 @@ function New-ExtensionForgeManifest {
         description      = $Description
     }
 
-    # Acción (popup): "action" (Chrome) o "browser_action" (Firefox)
+    # Acción (popup): "action" en MV3 para Chrome y Firefox ("browser_action" es de MV2)
     $actionKey = if ($manifestCfg['ActionKey']) { $manifestCfg['ActionKey'] } else { 'action' }
     $manifest[$actionKey] = [ordered]@{ default_popup = 'index.html' }
 

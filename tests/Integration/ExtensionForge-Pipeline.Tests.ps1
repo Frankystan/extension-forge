@@ -108,6 +108,8 @@ Describe 'Pipeline completo en Production (Chrome + Firefox)' -Tag 'Integration'
         $m.manifest_version                        | Should -Be 3
         $m.version                                 | Should -Be '2.3.4'
         @($m.background.scripts)                   | Should -Be @('background.js')
+        $m.action.default_popup                    | Should -Be 'index.html' -Because 'Firefox MV3 usa action'
+        $m.PSObject.Properties.Name                | Should -Not -Contain 'browser_action'
         $m.browser_specific_settings.gecko.id      | Should -Not -BeNullOrEmpty
         @($m.permissions)                          | Should -Contain 'contextMenus'
     }
@@ -202,6 +204,15 @@ Describe 'Errores y controles del pipeline' -Tag 'Integration' {
         { $script:mv2Result = Test-ExtensionForgePackage -WorkspacePath $ws -Environment Development 6>$null 3>$null 2>$null } |
             Should -Not -Throw -Because 'Validate debe devolver $false, no abortar'
         $script:mv2Result | Should -BeFalse
+    }
+
+    It 'Validate rechaza claves de MV2 (browser_action) en un manifest MV3' {
+        $ws = Join-Path $TestDrive 'mv2-keys'
+        $dir = Join-Path $ws 'dist' 'extension' 'firefox'
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        '{ "manifest_version": 3, "name": "x", "version": "1.0.0", "browser_action": { "default_popup": "index.html" } }' |
+            Set-Content (Join-Path $dir 'manifest.json')
+        Test-ExtensionForgePackage -WorkspacePath $ws -Environment Development 6>$null 3>$null 2>$null | Should -BeFalse
     }
 
     It 'Validate devuelve $false (sin abortar) si no existe dist/extension' {

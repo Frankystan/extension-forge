@@ -54,6 +54,14 @@ function Test-ExtensionForgePackage {
             $issues++
         }
 
+        # Claves de Manifest V2 que MV3 ya no admite (Chrome y Firefox usan "action")
+        foreach ($mv2Key in 'browser_action', 'page_action') {
+            if ($manifest.PSObject.Properties.Name -contains $mv2Key) {
+                Write-ExtensionForgeLog -Message "'$($dir.Name)': '$mv2Key' es una clave de MV2; en MV3 usa 'action'." -Level 'ERROR' @logParams
+                $issues++
+            }
+        }
+
         if ($Environment -eq 'Production') {
             $raw = Get-Content -Raw $manifestPath
             if ($raw -match 'unsafe-eval' -or $raw -match 'unsafe-inline') {

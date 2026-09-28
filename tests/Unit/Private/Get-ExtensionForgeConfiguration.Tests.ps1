@@ -89,11 +89,11 @@ Describe 'Get-ExtensionForgeConfiguration — contrato con Config/ real' -Tag 'P
         }
     }
 
-    It 'Firefox aplica scripts, browser_action y gecko anidado' {
+    It 'Firefox aplica scripts, action (MV3) y gecko anidado' {
         InModuleScope 'ExtensionForge' {
             $cfg = Get-ExtensionForgeConfiguration -Environment Production -Browser Firefox
             $cfg['Manifest']['BackgroundKey'] | Should -Be 'scripts'
-            $cfg['Manifest']['ActionKey']     | Should -Be 'browser_action'
+            $cfg['Manifest']['ActionKey']     | Should -Be 'action'
             $gecko = $cfg['Manifest']['BrowserSpecificSettings']['gecko']
             $gecko['id']                 | Should -Be 'extensionforge@ficticio.com'
             $gecko['strict_min_version'] | Should -Be '109.0'

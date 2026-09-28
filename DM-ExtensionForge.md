@@ -408,7 +408,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 |---|---|
 | `Import-Module ExtensionForge.psd1` | ✅ Importa y exporta los 7 cmdlets. |
 | `Get-ExtensionForgeConfiguration` (Production/Firefox) | ✅ Deep merge correcto (tras corregir B2). |
-| `New-ExtensionForgeManifest` (Chrome/Firefox) | ✅ Chrome: `action` + `service_worker` + `type:module`; Firefox: `browser_action` + `scripts` + `browser_specific_settings.gecko` + permiso `contextMenus`. |
+| `New-ExtensionForgeManifest` (Chrome/Firefox) | ✅ Chrome: `action` + `service_worker` + `type:module`; Firefox: `action` (MV3) + `scripts` + `browser_specific_settings.gecko` + permiso `contextMenus`. |
 | `Initialize-ExtensionForgeProject` (fresh) | ✅ Copia los 14 archivos de la plantilla con nombres correctos (tras corregir la resolución de ruta de `$TemplateDir`). |
 | Pester 6 (`Invoke-Pester`) | ⚠ No ejecutable en el sandbox de auditoría (Pester requiere acceso al registro `HKEY_CURRENT_USER`, denegado aquí). Los tests son válidos y se validaron por invocación directa; ejecútalos fuera del sandbox con `./scripts/Invoke-LocalCI.ps1`. |
 
@@ -461,7 +461,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 | `environments/staging.psd1` | Entorno | Optimización + SourceMaps (intermedio). |
 | `environments/production.psd1` | Entorno | Minificado estricto, sin SourceMaps, log Error. |
 | `browsers/chrome.psd1` | Navegador | `BackgroundKey=service_worker`, `ActionKey=action`. |
-| `browsers/firefox.psd1` | Navegador | `BackgroundKey=scripts`, `ActionKey=browser_action`, `gecko.id`. |
+| `browsers/firefox.psd1` | Navegador | `BackgroundKey=scripts`, `ActionKey=action`, `gecko.id`. |
 
 <a id="84-scripts-scripts"></a>
 

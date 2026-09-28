@@ -194,7 +194,7 @@ La configuración se compone por *deep merge* de tres capas (`Config/`):
 
 - `defaults.psd1` — rutas, Angular, scaffold, manifest base.
 - `environments/{development,staging,production}.psd1` — optimización, source maps, hot reload.
-- `browsers/{chrome,firefox}.psd1` — `service_worker` vs `scripts`, `action` vs `browser_action`, `gecko.id`.
+- `browsers/{chrome,firefox}.psd1` — `service_worker` vs `scripts`, `action` en ambos (MV3), `gecko.id`.
 
 ---
 
