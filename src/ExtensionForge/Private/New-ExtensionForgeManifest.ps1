@@ -4,6 +4,9 @@
 .DESCRIPTION
     Chrome  : background.service_worker = "background.js" (type module) + action.
     Firefox : background.scripts = ["background.js"] + action + browser_specific_settings (gecko).
+    content_scripts: si se pasa -ContentScripts (p. ej. desde src/manifest.json) se
+    respeta tal cual; un array vacío omite la clave. Sin -ContentScripts se usa el
+    valor por defecto (matches <all_urls>, js content.js).
 #>
 function New-ExtensionForgeManifest {
     [CmdletBinding()]
@@ -16,7 +19,11 @@ function New-ExtensionForgeManifest {
 
         [string]$Version = '1.0.0',
         [string]$Name = 'ExtensionForge Extension',
-        [string]$Description = 'Extensión construida con Angular + Angular Material (Manifest V3).'
+        [string]$Description = 'Extensión construida con Angular + Angular Material (Manifest V3).',
+
+        # content_scripts del manifest base. Si se omite, se usa <all_urls> + content.js.
+        [AllowEmptyCollection()]
+        [object[]]$ContentScripts
     )
 
     $scaffold    = $BrowserConfig['Scaffold']
@@ -53,12 +60,25 @@ function New-ExtensionForgeManifest {
     if ($permissions.Count -gt 0) { $manifest['permissions'] = @($permissions) }
 
     # Content script
-    $manifest['content_scripts'] = @(
-        [ordered]@{
-            matches = @('<all_urls>')
-            js      = @('content.js')
+    if ($PSBoundParameters.ContainsKey('ContentScripts')) {
+        $scripts = @($ContentScripts | Where-Object { $null -ne $_ })
+        for ($i = 0; $i -lt $scripts.Count; $i++) {
+            $cs = $scripts[$i]
+            $csMatches = if ($cs -is [System.Collections.IDictionary]) { $cs['matches'] } else { $cs.matches }
+            if (-not $csMatches -or @($csMatches).Count -eq 0) {
+                throw "content_scripts[$i] no define 'matches' (obligatorio en Manifest V3)."
+            }
         }
-    )
+        if ($scripts.Count -gt 0) { $manifest['content_scripts'] = $scripts }
+    }
+    else {
+        $manifest['content_scripts'] = @(
+            [ordered]@{
+                matches = @('<all_urls>')
+                js      = @('content.js')
+            }
+        )
+    }
 
     # Ajustes específicos de navegador (gecko) para Firefox
     if ($browser -eq 'Firefox' -and $manifestCfg['BrowserSpecificSettings']) {

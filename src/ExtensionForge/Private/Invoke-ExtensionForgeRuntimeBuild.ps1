@@ -61,8 +61,18 @@ function Invoke-ExtensionForgeRuntimeBuild {
         catch { }
     }
 
-    New-ExtensionForgeManifest -BrowserConfig $Config -OutputPath $BrowserOutputDir `
-        -Version $AppVersion -Name $name -Description $desc
+    $manifestParams = @{
+        BrowserConfig = $Config
+        OutputPath    = $BrowserOutputDir
+        Version       = $AppVersion
+        Name          = $name
+        Description   = $desc
+    }
+    # content_scripts del manifest base (matches, js, css, run_at...) se respetan tal cual
+    if ($bm -and $bm.PSObject.Properties.Name -contains 'content_scripts' -and $null -ne $bm.content_scripts) {
+        $manifestParams['ContentScripts'] = @($bm.content_scripts)
+    }
+    New-ExtensionForgeManifest @manifestParams
 
     # Fusionar claves extra del manifest base (side_panel, options_ui, host_permissions, ...)
     if ($bm) {

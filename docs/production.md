@@ -51,7 +51,7 @@ La comprobación de CSP es textual sobre el manifest: no analiza el código Java
 Antes de publicar:
 
 - **ID de Firefox:** `Config/browsers/firefox.psd1` usa el marcador `extensionforge@ficticio.com`. Sustitúyelo por un ID propio y estable; AMO lo asocia a la extensión para siempre.
-- **`<all_urls>`:** `New-ExtensionForgeManifest` genera siempre `content_scripts.matches = ["<all_urls>"]`, y `content_scripts` está en la lista de claves que el build **no** toma de `src/manifest.json`. Verificado el 2026-09-28: un `src/manifest.json` con `matches: ["https://example.com/*"]` produce `<all_urls>` en `dist/extension/chrome/manifest.json` (las claves extra como `side_panel` sí se conservan). No basta con cambiar `matches` en tu manifest base: hay que ajustar el generador o la configuración. Un patrón tan amplio aumenta la revisión de las tiendas.
+- **`content_scripts` / `matches`:** el build copia tal cual los `content_scripts` de `src/manifest.json` (`matches`, `js`, `css`, `run_at`, varios bloques…) a los manifests de Chrome y Firefox. Si el base no define `content_scripts`, se usa el valor por defecto `<all_urls>` + `content.js`; un array vacío (`"content_scripts": []`) elimina la clave. Un bloque sin `matches` hace fallar el build. Las plantillas traen `<all_urls>`: sustitúyelo por los dominios que necesites, porque un patrón tan amplio aumenta la revisión de las tiendas.
 - **Permisos:** base `storage`, `activeTab` (+ `contextMenus` en Firefox) unidos sin duplicados a los de `src/manifest.json`. Elimina los que no uses.
 - **Background IIFE + `type: module`:** esbuild genera bundles IIFE; son válidos como módulo mientras no usen `import`/`export` de nivel superior. Verifica la carga del service worker en `chrome://extensions` (enlace *service worker*).
 - No incluyas credenciales, endpoints internos, logs ni dependencias de desarrollo en `dist/extension/*`.
@@ -88,7 +88,7 @@ Cautelas:
 
 | Ref. | Limitación | Propuesta |
 |---|---|---|
-| P-01 | `matches` fijo a `<all_urls>` | Leer `content_scripts` de `src/manifest.json` o de `Manifest.ContentScripts` en la configuración |
+| ~~P-01~~ | ~~`matches` fijo a `<all_urls>`~~ | ✅ Resuelto: se respetan los `content_scripts` de `src/manifest.json` |
 | P-02 | ID gecko ficticio | Parametrizarlo por proyecto y validar en `Validate` que no contenga `ficticio` |
 | P-03 | Publish elige el ZIP por fecha | Añadir `-Version` o `-PackagePath` explícito |
 | P-04 | CSP comprobada solo en el manifest | Buscar `eval(`/`new Function` en los bundles de Production |

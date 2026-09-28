@@ -18,6 +18,7 @@ Las extensiones generadas llevan su propio `CHANGELOG.md`, gestionado por `scrip
 - Checklist de migración: documentación marcada como completada.
 
 ### Corregido
+- P-01: el build respeta los `content_scripts` de `src/manifest.json` (`matches`, `js`, `css`, `run_at`, varios bloques) en Chrome y Firefox, en lugar de forzar siempre `<all_urls>`. Array vacío omite la clave; un bloque sin `matches` hace fallar el build. 7 pruebas nuevas.
 - SemVer calculaba `0.0.1` a partir de una versión inválida (se reutilizaba un `$Matches` obsoleto) y sobrescribía un `package.json` con versión distinta.
 
 ## [2.1.0] - 2026-09-28

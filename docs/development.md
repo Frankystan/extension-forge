@@ -96,11 +96,12 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 |---|---|---|
 | `tests/Unit/Public` | Cmdlets exportados | ✅ |
 | `tests/Unit/Private` | Deep merge de `Get-ExtensionForgeConfiguration` (18) | ✅ |
+| `tests/Unit/Private` | `content_scripts` del manifest base en el build (7) | ✅ |
 | `tests/Unit/Tools` | Compatibilidad PowerShell 7.6.6 + `Invoke-SemVerRelease` (12) | ✅ |
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
 | `tests/Integration` E2E | Toolchain real, Node 22 | ✅ 4/4 |
 
-Total sin E2E: 54 superadas, 0 fallidas, 4 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 61 superadas, 0 fallidas, 4 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
 El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real: prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 

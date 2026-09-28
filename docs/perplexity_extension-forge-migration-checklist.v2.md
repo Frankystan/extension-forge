@@ -103,7 +103,7 @@ Mover scripts viejos a `scripts/archive/` o `scripts/migrations/`.
 ## 🔭 9. Siguientes mejoras (fuera del alcance de la migración)
 Detectadas en la auditoría del 2026-09-28; detalle en `docs/production.md` y `docs/adapters.md`.
 
-- [ ] **P-01**: `content_scripts.matches` configurable (hoy siempre `<all_urls>`).
+- [x] **P-01**: el build respeta `content_scripts` de `src/manifest.json` (7 pruebas en `tests/Unit/Private/Invoke-ExtensionForgeRuntimeBuild.ContentScripts.Tests.ps1`).
 - [ ] **P-02**: ID gecko por proyecto y validación que rechace el marcador `ficticio`.
 - [ ] **P-03**: `Publish-ExtensionForgeStore.ps1` con paquete/versión explícitos (hoy elige el ZIP más reciente).
 - [ ] **P-04**: Validación CSP también sobre los bundles JS de Production.

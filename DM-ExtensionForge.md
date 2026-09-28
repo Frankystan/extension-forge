@@ -4,7 +4,7 @@ source: 'DM-ExtensionForge.md'
 assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.1.0'
+version: '1.1.1'
 created: '2026-09-24T20:07+02:00'
 updated: '2026-09-28T13:30+02:00'
 language: 'es-ES'
@@ -458,8 +458,8 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 | `Get-ExtensionForgeConfiguration` | Deep merge `defaults + environments/<env> + browsers/<browser>`. |
 | `Write-ExtensionForgeLog` | Log JSONL (`logs/dev.log`, `logs/production.log`) sin BOM. |
 | `Test-ExtensionForgeTool` | `$true`/`$false` si un ejecutable está en el PATH. |
-| `New-ExtensionForgeManifest` | Genera `manifest.json` MV3 específico por navegador. |
-| `Invoke-ExtensionForgeRuntimeBuild` | Copia `dist` → `dist/extension/<browser>` + manifest + adaptador. |
+| `New-ExtensionForgeManifest` | Genera `manifest.json` MV3 específico por navegador. `-ContentScripts` opcional (por defecto `<all_urls>` + `content.js`; array vacío omite la clave; exige `matches`). |
+| `Invoke-ExtensionForgeRuntimeBuild` | Copia `dist` → `dist/extension/<browser>` + manifest + adaptador. Pasa al generador los `content_scripts` de `src/manifest.json`. |
 | `Invoke-ExtensionForgeChromeAdapter` | Garantiza `background.js` (Service Worker). |
 | `Invoke-ExtensionForgeFirefoxAdapter` | Garantiza `background.js` (Background Script). |
 
@@ -691,7 +691,7 @@ flowchart LR
 - ~~Implementar publicación real a tiendas~~ ✅ Existe `Publish-ExtensionForgeStore.ps1` (credenciales por variables de entorno). Pendiente: paquete explícito en lugar del ZIP más reciente (P-03).
 - ~~Completar tests de integración~~ ✅ Integración simulada (15) + E2E real (4) en CI. Pendiente: prueba de carga en navegador real (no automatizada).
 - ~~Completar manuales `development.md`, `production.md`, `adapters.md`, `release-process.md`~~ ✅ Añadidos el 2026-09-28 (§15).
-- Mejoras abiertas P-01…P-04, A-01…A-06 y CD-01: ver §15.3 y la sección 9 del checklist.
+- Mejoras abiertas P-02…P-04, A-01…A-06 y CD-01 (P-01 resuelto): ver §15.3 y la sección 9 del checklist.
 
 ---
 
@@ -942,7 +942,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 
 | Ref. | Hallazgo | Documento |
 |---|---|---|
-| P-01 | `content_scripts.matches` siempre `<all_urls>`, ignora el de `src/manifest.json` (reproducido) | `docs/production.md` |
+| P-01 | ✅ Resuelto (2026-09-28): antes `content_scripts.matches` era siempre `<all_urls>` e ignoraba `src/manifest.json`; ahora se respetan los `content_scripts` del manifest base | `docs/production.md` |
 | P-02 | ID gecko `extensionforge@ficticio.com` es un marcador | `docs/production.md` |
 | P-03 | `Publish-ExtensionForgeStore` sube el ZIP Chrome más reciente por fecha | `docs/production.md` |
 | P-04 | CSP comprobada solo en el manifest, no en los bundles | `docs/production.md` |
@@ -957,6 +957,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.1.1 | 2026-09-28 | Perplexity Computer | P-01 resuelto: el build respeta `content_scripts` de `src/manifest.json`. |
 | 1.1.0 | 2026-09-28 | Perplexity Computer | §14 sesiones Perplexity, §15 auditoría con verificación ejecutada; actualizados §5, §6.4, §8.4, §9.4 y §11.4. |
 
 ---
