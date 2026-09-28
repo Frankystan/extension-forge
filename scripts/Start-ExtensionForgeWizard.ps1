@@ -89,7 +89,7 @@ function Show-CheatSheet {
                 Write-Host '  ------------------------------------------------------------' -ForegroundColor DarkGray
                 Write-Host '  Instalación segura      → ./scripts/Install-ExtensionForge.ps1 -Force' -ForegroundColor White
                 Write-Host '  Instalación desarrollo   → ./scripts/Install-ExtensionForge.ps1 -Symlink' -ForegroundColor White
-                Write-Host '  Adaptadores Shadow DOM   → ./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar' -ForegroundColor White
+                Write-Host '  Adaptadores Shadow DOM   → ./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar -ComponentName MiPanel' -ForegroundColor White
                 Write-Host '  CI local                 → ./scripts/Invoke-LocalCI.ps1' -ForegroundColor White
                 Write-Host '  CD local (producción)    → ./scripts/Invoke-LocalCD.ps1' -ForegroundColor White
                 Write-Host '  Versionado SemVer        → ./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun' -ForegroundColor White
@@ -194,7 +194,35 @@ function Start-Wizard {
                     $adapterOptions = [ordered]@{ 'Sidebar' = 'Sidebar'; 'Overlay' = 'Overlay'; 'Inline' = 'Inline' }
                     Show-Header
                     $adapter = Get-MenuChoice -Title '🎨 TIPO DE ADAPTADOR (Shadow DOM)' -Options $adapterOptions
-                    Execute-Command "& `"$PSScriptRoot\Add-ContentAdapter.ps1`" -AdapterType $adapter"
+
+                    Show-Header
+                    Write-Host "  🎨 ADAPTADOR $($adapter.ToUpperInvariant()) — parámetros (ENTER = valor por defecto)" -ForegroundColor Cyan
+                    $adapterCmd = "& `"$PSScriptRoot\Add-ContentAdapter.ps1`" -AdapterType $adapter"
+
+                    while ($true) {
+                        $componentName = (Read-Host '  Nombre del componente en PascalCase [ExtensionForgeWidget]').Trim()
+                        if (-not $componentName -or $componentName -cmatch '^[A-Z][A-Za-z0-9]*$') { break }
+                        Write-Host '  ⚠ Usa PascalCase sin espacios (p. ej. MiPanel).' -ForegroundColor Yellow
+                    }
+                    if ($componentName) { $adapterCmd += " -ComponentName $componentName" }
+
+                    if ($adapter -in @('Sidebar', 'Overlay')) {
+                        while ($true) {
+                            $width = (Read-Host '  Ancho (px, rem, em, vw o %) [360px]').Trim()
+                            if (-not $width -or $width -match '^\d+(\.\d+)?(px|rem|em|vw|%)$') { break }
+                            Write-Host '  ⚠ Longitud CSS no válida (p. ej. 360px, 24rem, 30vw).' -ForegroundColor Yellow
+                        }
+                        if ($width) { $adapterCmd += " -Width $width" }
+                    }
+                    if ($adapter -eq 'Inline') {
+                        while ($true) {
+                            $selector = (Read-Host '  Selector CSS del contenedor [main]').Trim()
+                            if ($selector -notmatch "['`"\\]") { break }
+                            Write-Host '  ⚠ El selector no puede contener comillas ni barras invertidas.' -ForegroundColor Yellow
+                        }
+                        if ($selector) { $adapterCmd += " -TargetSelector '$selector'" }
+                    }
+                    Execute-Command $adapterCmd
                 }
                 'LocalCI' {
                     Execute-Command "& `"$PSScriptRoot\Invoke-LocalCI.ps1`""

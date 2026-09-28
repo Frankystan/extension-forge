@@ -34,7 +34,8 @@ git status --short                                           # 1. Debe estar vac
 # 6. Probar a mano dist/extension/chrome y dist/extension/firefox
 git add -A; git commit -m "release: vX.Y.Z"; git tag vX.Y.Z                            # 7. Commit + tag
 # 8. Publicar (acción externa e irreversible; ver production.md)
-./scripts/Publish-ExtensionForgeStore.ps1 -WorkspacePath <proyecto> -Browser All
+./scripts/Publish-ExtensionForgeStore.ps1 -WorkspacePath <proyecto> -Browser All -Version X.Y.Z -WhatIf   # comprobar
+./scripts/Publish-ExtensionForgeStore.ps1 -WorkspacePath <proyecto> -Browser All -Version X.Y.Z
 ```
 
 ## Qué hace Invoke-SemVerRelease
@@ -51,13 +52,15 @@ La versión 2.1.0 del script aceptaba versiones inválidas y calculaba un result
 
 | Paso | Acción | Si falla |
 |---|---|---|
-| 1 | `git status --porcelain` | Aborta si hay cambios; **si no hay repositorio Git solo avisa** |
-| 2 | `Invoke-Pester tests/` | Aborta; **si no existe `tests/` solo avisa** |
+| 1 | Repositorio Git sin cambios pendientes | Aborta si no es un repositorio Git o si hay cambios (salvo `-AllowNoGit`) |
+| 2 | `Invoke-Pester tests/` | Aborta si no existe `tests/`, si no contiene pruebas o si alguna falla (salvo `-AllowNoTests`) |
 | 3 | `Invoke-SemVerRelease` | Aborta (excepción) |
-| 4 | Build + Validate (Production, All) | Aborta: `Invoke-ExtensionForge` lanza una excepción si Build falla o si Validate devuelve `$false` |
-| 5 | Package (Production, All) | Genera ZIP/XPI en `dist/packages/` |
+| 4 | Build + Validate (Production, All) | Aborta y **restaura** `src/manifest.json`, `package.json` y `CHANGELOG.md` |
+| 5 | Package (Production, All) | Igual que el paso 4; si va bien, ZIP/XPI en `dist/packages/` |
 
-Por las dos celdas en negrita (comprobaciones que se omiten con solo un aviso), revisa la salida completa: un CD «completado» no prueba por sí solo que todas las puertas se hayan cumplido. Además, el paso 3 se ejecuta antes del build: si el build falla, quedan versión y changelog modificados; revierte con `git checkout -- src/manifest.json package.json CHANGELOG.md`.
+Todas las puertas abortan con una excepción (CD-01). `-AllowNoGit` y `-AllowNoTests` existen para casos excepcionales y dejan un aviso en la salida; no los uses en un release real. `WorkspacePath` es por defecto el directorio actual (el proyecto de la extensión) y el módulo se carga desde el propio ExtensionForge, no desde el proyecto.
+
+Hasta el 2026-09-28, `Invoke-LocalCD` solo avisaba sin Git o sin `tests/`, llamaba a `Invoke-Pester -Quiet` (parámetro que Pester 6.2.0 no admite: con tests, el paso 2 fallaba siempre) y cargaba el módulo desde `<proyecto>/src/ExtensionForge`, que un proyecto de extensión no tiene.
 
 ## Después de publicar
 

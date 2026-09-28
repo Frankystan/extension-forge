@@ -63,7 +63,7 @@ function Initialize-ExtensionForgeProject {
         Write-ExtensionForgeLog -Message "'angular.json' detectado: aplicando parches sin sobrescribir código existente..." @logParams
 
         # Añadir solo los archivos de extensión que falten
-        $extFiles = @('src\background.ts', 'src\content.ts', 'src\manifest.json', 'scripts\build-extension.mjs')
+        $extFiles = @('src\background.ts', 'src\content.ts', 'src\manifest.json', 'scripts\build-extension.mjs', 'tsconfig.content.json')
         foreach ($rel in $extFiles) {
             $dest = Join-Path $WorkspacePath $rel
             if (-not (Test-Path $dest)) {

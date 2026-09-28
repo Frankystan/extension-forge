@@ -4,7 +4,7 @@ source: 'DM-ExtensionForge.md'
 assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.1.2'
+version: '1.2.0'
 created: '2026-09-24T20:07+02:00'
 updated: '2026-09-28T13:30+02:00'
 language: 'es-ES'
@@ -45,7 +45,7 @@ bom: false
     - 7.5 [Verificación realizada](#75-verificación-realizada)
 8. [Referencia del módulo ExtensionForge](#8-referencia-del-módulo-extensionforge)
     - 8.1 [Cmdlets públicos (7) - `src/ExtensionForge/Public/`](#81-cmdlets-públicos-7-src-extensionforge-public)
-    - 8.2 [Funciones privadas (8) - `src/ExtensionForge/Private/`](#82-funciones-privadas-7-src-extensionforge-private)
+    - 8.2 [Funciones privadas (9) - `src/ExtensionForge/Private/`](#82-funciones-privadas-7-src-extensionforge-private)
     - 8.3 [Configuración por capas - `src/ExtensionForge/Config/`](#83-configuración-por-capas-src-extensionforge-config)
     - 8.4 [Scripts - `scripts/`](#84-scripts-scripts)
     - 8.5 [Plantillas Angular MV3 - `src/ExtensionForge/Templates/`](#85-plantilla-angular-mv3-src-extensionforge-templates-angular-mv3)
@@ -308,7 +308,7 @@ Auditoría actual sobre `C:\Dev\extension-forge`. Clasificación por tipo:
 | `ExtensionForge.psd1` | Manifiesto (PowerShell 7.6.6+, 7 funciones exportadas). |
 | `ExtensionForge.psm1` | Loader que inyecta `Public/` y `Private/`. |
 | `Public/` (7) | `Invoke-ExtensionForge`, `Test-ExtensionForgeDoctor`, `Initialize-ExtensionForgeProject`, `Build-ExtensionForgeProject`, `Test-ExtensionForgePackage`, `New-ExtensionForgePackage`, `Install-ExtensionForgeDevelopment`. |
-| `Private/` (8) | `Get-ExtensionForgeConfiguration`, `Write-ExtensionForgeLog`, `Test-ExtensionForgeTool`, `Test-ExtensionForgeFirefoxId`, `New-ExtensionForgeManifest`, `Invoke-ExtensionForgeRuntimeBuild`, `Invoke-ExtensionForgeChromeAdapter`, `Invoke-ExtensionForgeFirefoxAdapter`. |
+| `Private/` (9) | `Get-ExtensionForgeConfiguration`, `Write-ExtensionForgeLog`, `Test-ExtensionForgeTool`, `Test-ExtensionForgeFirefoxId`, `Find-ExtensionForgeUnsafeCode`, `New-ExtensionForgeManifest`, `Invoke-ExtensionForgeRuntimeBuild`, `Invoke-ExtensionForgeChromeAdapter`, `Invoke-ExtensionForgeFirefoxAdapter`. |
 | `Config/` (6) | `defaults.psd1`, `environments/{development,staging,production}.psd1`, `browsers/{chrome,firefox}.psd1`. |
 
 <a id="62-plantillas"></a>
@@ -451,13 +451,14 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 
 <a id="82-funciones-privadas-7-src-extensionforge-private"></a>
 
-### 8.2 Funciones privadas (8) - `src/ExtensionForge/Private/`
+### 8.2 Funciones privadas (9) - `src/ExtensionForge/Private/`
 
 | Función | Descripción |
 |---|---|
 | `Get-ExtensionForgeConfiguration` | Deep merge `defaults + environments/<env> + browsers/<browser>`. |
 | `Write-ExtensionForgeLog` | Log JSONL (`logs/dev.log`, `logs/production.log`) sin BOM. |
 | `Test-ExtensionForgeTool` | `$true`/`$false` si un ejecutable está en el PATH. |
+| `Find-ExtensionForgeUnsafeCode` | Busca en un runtime `eval(`, `new Function(`, `Function('…')`, timers con cadena, `import()` remoto (JS) y `<script src>` remoto (HTML). Devuelve `Rule`, `File`, `Line`, `Snippet`. Lo usa `Validate` en Production (P-04). |
 | `Test-ExtensionForgeFirefoxId` | Valida `gecko.id` (tipo email ≤ 80 o `{GUID}`) y detecta el marcador de ejemplo. Devuelve `IsValid`, `IsPlaceholder`, `Reason`. |
 | `New-ExtensionForgeManifest` | Genera `manifest.json` MV3 específico por navegador. `-ContentScripts` opcional (por defecto `<all_urls>` + `content.js`; array vacío omite la clave; exige `matches`). |
 | `Invoke-ExtensionForgeRuntimeBuild` | Copia `dist` → `dist/extension/<browser>` + manifest + adaptador. Pasa al generador los `content_scripts` de `src/manifest.json`. |
@@ -486,10 +487,10 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 | `Start-ExtensionForgeWizard.ps1` | **Wizard interactivo** (menús + glosario/cheat sheet). |
 | `Install-ExtensionForge.ps1` | Instala el módulo (`-Force` o `-Symlink`). |
 | `Invoke-LocalCI.ps1` | Pester + Doctor + dry-run de scaffold. |
-| `Invoke-LocalCD.ps1` | Git limpio → Pester → SemVer → Build/Validate/Package Producción. |
+| `Invoke-LocalCD.ps1` | Git limpio → Pester → SemVer → Build/Validate/Package Producción. Aborta sin Git o sin `tests/` (salvo `-AllowNoGit`/`-AllowNoTests`) y restaura la versión si Build/Validate/Package fallan. `WorkspacePath` = directorio actual. |
 | `Invoke-SemVerRelease.ps1` | v2.2.0: bump explícito `patch/minor/major` (`auto` obsoleto = `patch`), validación estricta manifest/package, rollback, `-DryRun`/`-WhatIf` + `CHANGELOG.md`. |
-| `Add-ContentAdapter.ps1` | Adaptador Shadow DOM (`Sidebar/Overlay/Inline`). |
-| `Publish-ExtensionForgeStore.ps1` | Publica en Chrome Web Store (`chrome-webstore-upload`) y AMO (`web-ext sign`). |
+| `Add-ContentAdapter.ps1` | Adaptador Shadow DOM (`Sidebar/Overlay/Inline`): genera componente (`-ComponentName`, kebab-case, ShadowDom), adaptador (`-Width`, `-TargetSelector`), tema Material en `:host` y `scss.d.ts`. El content script se compila con AOT (`tsconfig.content.json` + ngc + linker). |
+| `Publish-ExtensionForgeStore.ps1` | Publica en Chrome Web Store (`chrome-webstore-upload`) y AMO (`web-ext sign`) la versión `-Version`/`package.json` (o `-PackagePath`), verificando la versión de cada paquete; `-WhatIf`. |
 | `Test-ExtensionForgePowerShellCompatibility.ps1` | Valida que todos los scripts del repo cumplen el piso PowerShell 7.6.6 (`-Normalize` autocorrige las declaraciones de versión). |
 
 <a id="85-plantilla-angular-mv3-src-extensionforge-templates-angular-mv3"></a>
@@ -689,10 +690,10 @@ flowchart LR
 ### 11.4 Pendientes para producción
 
 - ~~Confirmar versiones reales~~ ✅ Confirmado: PowerShell 7.6.6+, Angular 22.2, Node 22+ (verificado por `Test-ExtensionForgePowerShellCompatibility.ps1`).
-- ~~Implementar publicación real a tiendas~~ ✅ Existe `Publish-ExtensionForgeStore.ps1` (credenciales por variables de entorno). Pendiente: paquete explícito en lugar del ZIP más reciente (P-03).
+- ~~Implementar publicación real a tiendas~~ ✅ Existe `Publish-ExtensionForgeStore.ps1` (credenciales por variables de entorno). Paquete explícito por versión desde 2026-09-28 (P-03 resuelto).
 - ~~Completar tests de integración~~ ✅ Integración simulada (15) + E2E real (4) en CI. Pendiente: prueba de carga en navegador real (no automatizada).
 - ~~Completar manuales `development.md`, `production.md`, `adapters.md`, `release-process.md`~~ ✅ Añadidos el 2026-09-28 (§15).
-- Mejoras abiertas P-03, P-04, A-01…A-06 y CD-01 (P-01 y P-02 resueltos): ver §15.3 y la sección 9 del checklist.
+- Mejoras de la auditoría (P-01…P-04, A-01…A-06, CD-01, DOC-01): todas resueltas el 2026-09-28; ver §15.3 y la sección 9 del checklist.
 
 ---
 
@@ -945,11 +946,11 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 |---|---|---|
 | P-01 | ✅ Resuelto (2026-09-28): antes `content_scripts.matches` era siempre `<all_urls>` e ignoraba `src/manifest.json`; ahora se respetan los `content_scripts` del manifest base | `docs/production.md` |
 | P-02 | ✅ Resuelto (2026-09-28): ID de Firefox parametrizable (`-FirefoxExtensionId`, Wizard o `src/manifest.json`) y validado en `Validate` | `docs/production.md` |
-| P-03 | `Publish-ExtensionForgeStore` sube el ZIP Chrome más reciente por fecha | `docs/production.md` |
-| P-04 | CSP comprobada solo en el manifest, no en los bundles | `docs/production.md` |
-| A-01…A-06 | Ruta de import, nombres, compilación Angular en content script y estilos Material del adaptador | `docs/adapters.md` |
-| CD-01 | `Invoke-LocalCD` solo avisa si no hay Git o `tests/` | `docs/release-process.md` |
-| DOC-01 | El aviso de `Add-ContentAdapter` remite a `entryPoints` de `angular.json`, pero el build usa esbuild sobre `content.ts` | `docs/adapters.md` |
+| P-03 | ✅ Resuelto (2026-09-28): antes subía el ZIP Chrome más reciente por fecha; ahora `-Version`/`-PackagePath` con verificación de versión y `-WhatIf` | `docs/production.md` |
+| P-04 | ✅ Resuelto (2026-09-28): `Validate` Production revisa también los bundles JS/HTML (`Find-ExtensionForgeUnsafeCode`) | `docs/production.md` |
+| A-01…A-06 | ✅ Resuelto (2026-09-28): componente generado en su ruta, kebab-case, AOT (ngc + linker), host dimensionado, tema Material en el Shadow Root, Wizard con parámetros. Verificado por E2E y en Chromium | `docs/adapters.md` |
+| CD-01 | ✅ Resuelto (2026-09-28): aborta sin Git/`tests/`, restaura la versión si falla el build; corregido además `Invoke-Pester -Quiet` y la ruta del módulo | `docs/release-process.md` |
+| DOC-01 | ✅ Resuelto (2026-09-28): el aviso indica el import en `content.ts` | `docs/adapters.md` |
 
 <a id="16-registro-cambios-dm"></a>
 
@@ -958,6 +959,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.2.0 | 2026-09-28 | Perplexity Computer | Resueltos P-03, P-04, A-01…A-06, CD-01 y DOC-01: publicación por versión explícita, revisión de bundles en Validate, adaptadores con AOT y tema Material, CD que aborta y revierte. Nueva función privada `Find-ExtensionForgeUnsafeCode`. |
 | 1.1.2 | 2026-09-28 | Perplexity Computer | P-02 resuelto: ID de Firefox parametrizable y validado; nueva función privada `Test-ExtensionForgeFirefoxId`. |
 | 1.1.1 | 2026-09-28 | Perplexity Computer | P-01 resuelto: el build respeta `content_scripts` de `src/manifest.json`. |
 | 1.1.0 | 2026-09-28 | Perplexity Computer | §14 sesiones Perplexity, §15 auditoría con verificación ejecutada; actualizados §5, §6.4, §8.4, §9.4 y §11.4. |

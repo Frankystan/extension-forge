@@ -105,8 +105,8 @@ Detectadas en la auditoría del 2026-09-28; detalle en `docs/production.md` y `d
 
 - [x] **P-01**: el build respeta `content_scripts` de `src/manifest.json` (7 pruebas en `tests/Unit/Private/Invoke-ExtensionForgeRuntimeBuild.ContentScripts.Tests.ps1`).
 - [x] **P-02**: ID de Firefox por proyecto (`-FirefoxExtensionId`, Wizard o `src/manifest.json`) y `Validate` que rechaza ID ausente/inválido y, en Production, el marcador (22 pruebas en `tests/Unit/Private/Test-ExtensionForgeFirefoxId.Tests.ps1`).
-- [ ] **P-03**: `Publish-ExtensionForgeStore.ps1` con paquete/versión explícitos (hoy elige el ZIP más reciente).
-- [ ] **P-04**: Validación CSP también sobre los bundles JS de Production.
-- [ ] **A-01/A-03**: Ruta de import del adaptador y compilación Angular (AOT/JIT) dentro del content script.
-- [ ] **CD-01**: `Invoke-LocalCD.ps1` debe abortar (no solo avisar) si no hay Git o no existe `tests/`.
+- [x] **P-03**: `Publish-ExtensionForgeStore.ps1` con `-Version`/`-PackagePath`, comprobación de la versión del paquete y `-WhatIf` (6 pruebas).
+- [x] **P-04**: `Validate` Production revisa bundles JS/HTML (`eval`, `new Function`, `Function('…')`, timers con cadena, `import()`/`<script>` remotos) con `Find-ExtensionForgeUnsafeCode` (15 pruebas).
+- [x] **A-01…A-06 / DOC-01**: el generador crea el componente, el content script se compila con AOT (ngc + linker), host dimensionado por tipo, tema Material en el Shadow Root y Wizard con parámetros (12 pruebas + E2E + prueba manual en Chromium).
+- [x] **CD-01**: `Invoke-LocalCD.ps1` aborta sin Git, con cambios, sin `tests/` o con tests fallidos (`-AllowNoGit`/`-AllowNoTests` explícitos) y restaura la versión si Build/Validate/Package fallan (5 pruebas).
 

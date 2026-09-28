@@ -77,4 +77,20 @@ Describe 'E2E real con Angular CLI y esbuild' -Tag 'Integration', 'E2E' -Skip:(-
             finally { $zip.Dispose() }
         }
     }
+
+    It 'Adaptador Sidebar: el content script se compila con AOT (sin JIT) y pasa Validate' {
+        & (Join-Path $script:RepoRoot 'scripts' 'Add-ContentAdapter.ps1') -WorkspacePath $script:Ws -AdapterType Sidebar 6>$null | Out-Null
+        Add-Content -Path (Join-Path $script:Ws 'src' 'content.ts') -Value @(
+            "import { bootstrapSidebarAdapter } from './content-scripts/adapters/sidebar-adapter';"
+            'void bootstrapSidebarAdapter();'
+        )
+        { Build-ExtensionForgeProject -WorkspacePath $script:Ws -Browser All -Environment Production 6>$null } | Should -Not -Throw
+        foreach ($b in 'chrome', 'firefox') {
+            $js = Get-Content -Raw (Join-Path $script:Ws 'dist' 'extension' $b 'content.js')
+            $js | Should -Match 'ext-forge-sidebar-host' -Because 'el adaptador forma parte del bundle'
+            $js | Should -Not -Match 'ɵɵngDeclare' -Because 'el linker completa las declaraciones parciales de Angular Material'
+            $js | Should -Not -Match 'ɵɵdefineComponent\(\{[^}]*template:\s*`' -Because 'el componente llega compilado (AOT), no como plantilla JIT'
+        }
+        Test-ExtensionForgePackage -WorkspacePath $script:Ws -Environment Production 6>$null | Should -BeTrue
+    }
 }

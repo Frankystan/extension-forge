@@ -60,11 +60,15 @@ function Build-ExtensionForgeProject {
     if (Test-Path $esbuildScript) {
         Write-ExtensionForgeLog -Message 'Compilando background.js y content.js (esbuild)...' @logParams
         Push-Location $WorkspacePath
+        # build-extension.mjs lee EXTFORGE_ENVIRONMENT (Production → minify + ngDevMode=false)
+        $prevEnv = $env:EXTFORGE_ENVIRONMENT
+        $env:EXTFORGE_ENVIRONMENT = $Environment
         try {
             & node $esbuildScript $NgDist
             if ($LASTEXITCODE -ne 0) { throw "Falló la compilación de background/content (exit $LASTEXITCODE)." }
         }
         finally {
+            $env:EXTFORGE_ENVIRONMENT = $prevEnv
             Pop-Location
         }
     }

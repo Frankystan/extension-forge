@@ -20,7 +20,7 @@
 #>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param(
-    [string]$WorkspacePath = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
+    [string]$WorkspacePath = "$PWD",
     [ValidateSet('auto', 'patch', 'minor', 'major')]
     [string]$BumpType = 'patch',
     [switch]$DryRun

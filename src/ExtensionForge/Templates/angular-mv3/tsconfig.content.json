@@ -1,0 +1,26 @@
+/* Content script: ngc (AOT) compila src/content.ts y sus componentes Angular a out-tsc/content;
+   scripts/build-extension.mjs empaqueta ese resultado con esbuild. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/content",
+    "rootDir": "./src",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "sourceMap": false,
+    "declaration": false,
+    "types": [
+      "chrome"
+    ]
+  },
+  "files": [
+    "src/content.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ],
+  "angularCompilerOptions": {
+    "compilationMode": "full",
+    "strictTemplates": true
+  }
+}

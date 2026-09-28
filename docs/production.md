@@ -38,6 +38,7 @@ Production aplica `Optimization`, `Aot` y `ExtractLicenses` y desactiva SourceMa
 - `manifest_version` no es 3;
 - aparecen claves MV2 (`browser_action`, `page_action`);
 - en Production, el manifest contiene `unsafe-eval` o `unsafe-inline`;
+- en Production, algún bundle (`*.js`, `*.mjs`) usa `eval(`, `new Function(`, `Function('…')`, `setTimeout`/`setInterval` con cadena o `import()` remoto, o algún HTML carga un `<script src>` remoto. Se informa archivo, línea y fragmento. Verificado sin falsos positivos sobre los bundles reales de Angular 22 + Material de la plantilla;
 - en Firefox, falta `browser_specific_settings.gecko.id`, tiene formato inválido o, en Production, es el marcador de ejemplo.
 
 La comprobación de CSP es textual sobre el manifest: no analiza el código JavaScript empaquetado.
@@ -83,7 +84,12 @@ La versión del nombre se lee de `package.json`. El `manifest.json` queda en la 
 
 Cautelas:
 
-- Chrome sube el `extensionforge-chrome-v*.zip` **más reciente por fecha de modificación**, no necesariamente el validado. Deja en `dist/packages/` solo el ZIP que quieres publicar.
+- **Paquete explícito:** se publica la versión `-Version X.Y.Z` o, si se omite, la de `package.json`. Chrome sube exactamente `dist/packages/extensionforge-chrome-v<versión>.zip` (o `-PackagePath`) y comprueba que el `manifest.json` de dentro tenga esa versión; Firefox firma `dist/extension/firefox` solo si su manifest tiene esa versión. Si algo no cuadra, aborta **antes** de subir nada. Nunca elige un ZIP por fecha.
+- `-WhatIf` muestra qué paquete se publicaría en cada tienda sin subir nada:
+  ```powershell
+  ./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version 1.4.0 -WhatIf
+  ```
+- `WorkspacePath` es por defecto el directorio actual (el proyecto de la extensión).
 - `--auto-publish` envía a revisión y publica sin paso intermedio; para revisión manual, sube desde el panel del desarrollador.
 - Firefox firma desde `dist/extension/firefox`, no desde el ZIP.
 - Si faltan credenciales solo hay advertencias: comprueba el resultado por tienda.
@@ -95,5 +101,5 @@ Cautelas:
 |---|---|---|
 | ~~P-01~~ | ~~`matches` fijo a `<all_urls>`~~ | ✅ Resuelto: se respetan los `content_scripts` de `src/manifest.json` |
 | ~~P-02~~ | ~~ID gecko ficticio~~ | ✅ Resuelto: `-FirefoxExtensionId` / `src/manifest.json` + validación en `Validate` |
-| P-03 | Publish elige el ZIP por fecha | Añadir `-Version` o `-PackagePath` explícito |
-| P-04 | CSP comprobada solo en el manifest | Buscar `eval(`/`new Function` en los bundles de Production |
+| ~~P-03~~ | ~~Publish elige el ZIP por fecha~~ | ✅ Resuelto: `-Version` / `-PackagePath`, verificación de la versión del paquete y `-WhatIf` |
+| ~~P-04~~ | ~~CSP comprobada solo en el manifest~~ | ✅ Resuelto: `Validate` en Production revisa también los bundles JS y HTML |

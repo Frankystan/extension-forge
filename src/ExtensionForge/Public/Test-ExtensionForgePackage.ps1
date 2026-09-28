@@ -91,6 +91,14 @@ function Test-ExtensionForgePackage {
                 Write-ExtensionForgeLog -Message "'$($dir.Name)': CSP contiene 'unsafe-eval'/'unsafe-inline' (rechazado por las tiendas)." -Level 'WARN' @logParams
                 $issues++
             }
+
+            # P-04: código dinámico o remoto en los bundles (MV3 lo bloquea en runtime
+            # y las tiendas lo rechazan), no solo en la CSP del manifest.
+            $codeFindings = Find-ExtensionForgeUnsafeCode -Path $dir.FullName
+            foreach ($f in $codeFindings) {
+                Write-ExtensionForgeLog -Message "'$($dir.Name)': $($f.Rule) en $($f.File) (línea $($f.Line)): $($f.Snippet)" -Level 'ERROR' @logParams
+                $issues++
+            }
         }
 
         Write-ExtensionForgeLog -Message "'$($dir.Name)': manifest_version 3 y estructura OK." @logParams

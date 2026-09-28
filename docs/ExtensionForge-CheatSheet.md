@@ -25,11 +25,11 @@ Parámetros:
 | Wizard interactivo | `./scripts/Start-ExtensionForgeWizard.ps1` |
 | Instalar módulo | `./scripts/Install-ExtensionForge.ps1 -Force` |
 | Instalar en desarrollo (symlink) | `./scripts/Install-ExtensionForge.ps1 -Symlink` |
-| Adaptador Shadow DOM | `./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar` |
+| Adaptador Shadow DOM | `./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar -ComponentName MiPanel -Width 360px` |
 | CI local | `./scripts/Invoke-LocalCI.ps1` |
 | CD local (producción) | `./scripts/Invoke-LocalCD.ps1` |
 | Versionado SemVer | `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; `patch`/`minor`/`major` explícito) |
-| Publicar en tiendas | `./scripts/Publish-ExtensionForgeStore.ps1 -Browser All` |
+| Publicar en tiendas | `./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version X.Y.Z` (`-WhatIf` para comprobar) |
 
 ## 🎯 3. Flujo completo (de 0 a tiendas)
 
@@ -46,7 +46,8 @@ Invoke-ExtensionForge -Action Build -Browser All -Environment Development
 ./scripts/Invoke-LocalCD.ps1                   # versiona + build prod + valida + empaqueta
 
 # 3. Publicación (requiere credenciales en variables de entorno)
-./scripts/Publish-ExtensionForgeStore.ps1 -Browser All
+./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version X.Y.Z -WhatIf
+./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version X.Y.Z
 ```
 
 ## 🔑 4. Credenciales de tiendas (variables de entorno)

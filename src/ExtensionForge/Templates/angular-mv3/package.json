@@ -28,8 +28,10 @@
     "@angular/build": "^22.2.0",
     "@angular/cli": "^22.2.0",
     "@angular/compiler-cli": "^22.2.0",
+    "@babel/core": "^8.0.5",
     "@types/chrome": "^0.0.268",
     "esbuild": "^0.28.2",
+    "sass": "^1.104.1",
     "typescript": "~6.0.3"
   }
 }

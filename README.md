@@ -182,7 +182,8 @@ Invoke-ExtensionForge -Action InstallDev -Browser Chrome   # instrucciones de ca
 3. Publica:
 
 ```powershell
-./scripts/Publish-ExtensionForgeStore.ps1 -Browser All          # ambas tiendas
+./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version 1.4.0 -WhatIf  # qué se publicaría
+./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version 1.4.0          # ambas tiendas
 ./scripts/Publish-ExtensionForgeStore.ps1 -Browser Firefox -FirefoxChannel unlisted  # solo AMO, distribución propia
 ```
 
@@ -202,7 +203,7 @@ La configuración se compone por *deep merge* de tres capas (`Config/`):
 
 - **Compatibilidad PowerShell:** `./scripts/Test-ExtensionForgePowerShellCompatibility.ps1` valida todos los scripts contra el piso 7.6.6 (`-Normalize` autocorrige declaraciones de versión).
 - **CI local:** `./scripts/Invoke-LocalCI.ps1` (Pester + Doctor + dry-run de scaffold).
-- **CD local:** `./scripts/Invoke-LocalCD.ps1` (Git limpio → Pester → SemVer → Build Prod → Validate → Package).
+- **CD local:** `./scripts/Invoke-LocalCD.ps1` desde el proyecto de la extensión (Git limpio → Pester → SemVer → Build Prod → Validate → Package). Aborta sin Git o sin `tests/` y revierte la versión si el build falla.
 - **Versionado:** `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; el tipo `patch`/`minor`/`major` es explícito). Ver [docs/release-process.md](docs/release-process.md).
 - **CI remota:** `.github/workflows/extension-forge-ci.yml` (Ubuntu + Windows, Node 22/24).
 

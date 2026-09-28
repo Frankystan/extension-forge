@@ -98,13 +98,15 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 | `tests/Unit/Private` | Deep merge de `Get-ExtensionForgeConfiguration` (18) | ✅ |
 | `tests/Unit/Private` | `content_scripts` del manifest base en el build (7) | ✅ |
 | `tests/Unit/Private` | ID de Firefox: formato, build, Validate e Initialize (22) | ✅ |
+| `tests/Unit/Private` | Código dinámico/remoto en bundles y `Validate` Production (15) | ✅ |
+| `tests/Unit/Tools` | `Publish-ExtensionForgeStore` con `-WhatIf` (6), `Invoke-LocalCD` (5), `Add-ContentAdapter` (12) | ✅ |
 | `tests/Unit/Tools` | Compatibilidad PowerShell 7.6.6 + `Invoke-SemVerRelease` (12) | ✅ |
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
-| `tests/Integration` E2E | Toolchain real, Node 22 | ✅ 4/4 |
+| `tests/Integration` E2E | Toolchain real, Node 22, incluido un adaptador Sidebar compilado con AOT | ✅ 5/5 |
 
-Total sin E2E: 83 superadas, 0 fallidas, 4 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 121 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
-El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real: prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
+El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real (el adaptador se verificó a mano en Chromium, ver [adapters.md](adapters.md)): prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 
 ## Problemas frecuentes
 
