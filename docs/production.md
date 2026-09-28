@@ -37,7 +37,8 @@ Production aplica `Optimization`, `Aot` y `ExtractLicenses` y desactiva SourceMa
 - el JSON no es válido o falta el archivo;
 - `manifest_version` no es 3;
 - aparecen claves MV2 (`browser_action`, `page_action`);
-- en Production, el manifest contiene `unsafe-eval` o `unsafe-inline`.
+- en Production, el manifest contiene `unsafe-eval` o `unsafe-inline`;
+- en Firefox, falta `browser_specific_settings.gecko.id`, tiene formato inválido o, en Production, es el marcador de ejemplo.
 
 La comprobación de CSP es textual sobre el manifest: no analiza el código JavaScript empaquetado.
 
@@ -50,7 +51,11 @@ La comprobación de CSP es textual sobre el manifest: no analiza el código Java
 
 Antes de publicar:
 
-- **ID de Firefox:** `Config/browsers/firefox.psd1` usa el marcador `extensionforge@ficticio.com`. Sustitúyelo por un ID propio y estable; AMO lo asocia a la extensión para siempre.
+- **ID de Firefox (`gecko.id`):** obligatorio para firmar extensiones MV3; AMO no lo asigna y lo asocia a la extensión para siempre. Formatos válidos: `nombre@dominio` (≤ 80 caracteres, p. ej. `mi-extension@mi-dominio.dev`) o `{GUID}`. Defínelo de una de estas formas:
+  - `Invoke-ExtensionForge -Action Initialize -FirefoxExtensionId 'mi-extension@mi-dominio.dev'` (o en el Wizard, que lo pregunta si el navegador incluye Firefox). Escribe `browser_specific_settings.gecko.id` en `src/manifest.json` y nunca sustituye un ID propio ya existente.
+  - A mano en `src/manifest.json` → `browser_specific_settings.gecko.id`. El build fusiona ese bloque sobre `Config/browsers/firefox.psd1` (clave a clave), así que también puedes declarar `strict_min_version`, `gecko_android` o `data_collection_permissions`.
+
+  `Validate` rechaza un paquete Firefox sin ID o con formato inválido, y en Production también el marcador de ejemplo `extensionforge@ficticio.com` (en Development solo avisa). Desde el 3 de noviembre de 2025, AMO exige además `gecko.data_collection_permissions` en las extensiones nuevas ([MDN](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings)).
 - **`content_scripts` / `matches`:** el build copia tal cual los `content_scripts` de `src/manifest.json` (`matches`, `js`, `css`, `run_at`, varios bloques…) a los manifests de Chrome y Firefox. Si el base no define `content_scripts`, se usa el valor por defecto `<all_urls>` + `content.js`; un array vacío (`"content_scripts": []`) elimina la clave. Un bloque sin `matches` hace fallar el build. Las plantillas traen `<all_urls>`: sustitúyelo por los dominios que necesites, porque un patrón tan amplio aumenta la revisión de las tiendas.
 - **Permisos:** base `storage`, `activeTab` (+ `contextMenus` en Firefox) unidos sin duplicados a los de `src/manifest.json`. Elimina los que no uses.
 - **Background IIFE + `type: module`:** esbuild genera bundles IIFE; son válidos como módulo mientras no usen `import`/`export` de nivel superior. Verifica la carga del service worker en `chrome://extensions` (enlace *service worker*).
@@ -89,6 +94,6 @@ Cautelas:
 | Ref. | Limitación | Propuesta |
 |---|---|---|
 | ~~P-01~~ | ~~`matches` fijo a `<all_urls>`~~ | ✅ Resuelto: se respetan los `content_scripts` de `src/manifest.json` |
-| P-02 | ID gecko ficticio | Parametrizarlo por proyecto y validar en `Validate` que no contenga `ficticio` |
+| ~~P-02~~ | ~~ID gecko ficticio~~ | ✅ Resuelto: `-FirefoxExtensionId` / `src/manifest.json` + validación en `Validate` |
 | P-03 | Publish elige el ZIP por fecha | Añadir `-Version` o `-PackagePath` explícito |
 | P-04 | CSP comprobada solo en el manifest | Buscar `eval(`/`new Function` en los bundles de Production |

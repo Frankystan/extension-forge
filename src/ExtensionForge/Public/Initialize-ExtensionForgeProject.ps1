@@ -6,6 +6,8 @@
     - Si ya existe: añade solo los archivos de extensión que falten y parchea
       angular.json/package.json SIN sobrescribir código nativo del desarrollador
       (regla de oro).
+    - -FirefoxExtensionId escribe browser_specific_settings.gecko.id en src/manifest.json
+      (solo si no hay ID o si es el marcador de ejemplo; nunca sustituye un ID propio).
 #>
 function Initialize-ExtensionForgeProject {
     [CmdletBinding()]
@@ -16,7 +18,10 @@ function Initialize-ExtensionForgeProject {
         [ValidateSet('Development', 'Staging', 'Production')]
         [string]$Environment = 'Development',
         [ValidateSet('angular-mv3', 'angular-mv3-demo')]
-        [string]$Template = 'angular-mv3'
+        [string]$Template = 'angular-mv3',
+
+        # ID de Firefox (gecko.id): 'nombre@dominio' o '{GUID}'. Obligatorio para firmar MV3.
+        [string]$FirefoxExtensionId
     )
 
     $ErrorActionPreference = 'Stop'
@@ -157,6 +162,42 @@ function Initialize-ExtensionForgeProject {
                 $pkg | ConvertTo-Json -Depth 20 | Set-Content -Path $pkgPath -Encoding utf8
                 Write-ExtensionForgeLog -Message 'package.json: scripts build:ext/watch:ext añadidos.' @logParams
             }
+        }
+    }
+
+    # ID de Firefox en el manifest base
+    if ($PSBoundParameters.ContainsKey('FirefoxExtensionId')) {
+        $idCheck = Test-ExtensionForgeFirefoxId -Id $FirefoxExtensionId
+        if (-not $idCheck.IsValid) { throw "FirefoxExtensionId $($idCheck.Reason)" }
+        if ($idCheck.IsPlaceholder) { throw "FirefoxExtensionId '$FirefoxExtensionId' es el marcador de ejemplo; usa un ID propio." }
+
+        $baseManifestPath = Join-Path $WorkspacePath 'src' 'manifest.json'
+        if (-not (Test-Path $baseManifestPath)) {
+            throw "No existe src/manifest.json en '$WorkspacePath'; no se puede fijar el ID de Firefox."
+        }
+        $bm = Get-Content -Raw $baseManifestPath | ConvertFrom-Json
+        $currentId = $null
+        if ($bm.browser_specific_settings -and $bm.browser_specific_settings.gecko) {
+            $currentId = [string]$bm.browser_specific_settings.gecko.id
+        }
+        $current = Test-ExtensionForgeFirefoxId -Id $currentId
+
+        if ($currentId -eq $FirefoxExtensionId) {
+            Write-ExtensionForgeLog -Message "src/manifest.json ya usa el ID de Firefox '$FirefoxExtensionId'." @logParams
+        }
+        elseif ($current.IsValid -and -not $current.IsPlaceholder) {
+            Write-ExtensionForgeLog -Message "src/manifest.json ya define el ID de Firefox '$currentId'; no se sustituye por '$FirefoxExtensionId' (regla de oro). Edítalo a mano si quieres cambiarlo." -Level 'WARN' @logParams
+        }
+        else {
+            if (-not $bm.browser_specific_settings) {
+                $bm | Add-Member -NotePropertyName 'browser_specific_settings' -NotePropertyValue ([pscustomobject]@{}) -Force
+            }
+            if (-not $bm.browser_specific_settings.gecko) {
+                $bm.browser_specific_settings | Add-Member -NotePropertyName 'gecko' -NotePropertyValue ([pscustomobject]@{}) -Force
+            }
+            $bm.browser_specific_settings.gecko | Add-Member -NotePropertyName 'id' -NotePropertyValue $FirefoxExtensionId -Force
+            $bm | ConvertTo-Json -Depth 20 | Set-Content -Path $baseManifestPath -Encoding utf8
+            Write-ExtensionForgeLog -Message "src/manifest.json: browser_specific_settings.gecko.id = '$FirefoxExtensionId'." @logParams
         }
     }
 

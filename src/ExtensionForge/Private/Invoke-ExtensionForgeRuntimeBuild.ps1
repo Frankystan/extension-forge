@@ -61,6 +61,31 @@ function Invoke-ExtensionForgeRuntimeBuild {
         catch { }
     }
 
+    # browser_specific_settings (Firefox): el manifest base tiene prioridad sobre la
+    # configuración (Config/browsers/firefox.psd1). Se fusiona por bloque (gecko,
+    # gecko_android...) y por clave, p. ej. gecko.id o gecko.data_collection_permissions.
+    if ($Browser -eq 'Firefox' -and $bm -and $bm.PSObject.Properties.Name -contains 'browser_specific_settings' -and $null -ne $bm.browser_specific_settings) {
+        $bss = [ordered]@{}
+        $cfgBss = $Config['Manifest']['BrowserSpecificSettings']
+        if ($cfgBss) {
+            foreach ($k in @($cfgBss.Keys)) {
+                $block = [ordered]@{}
+                if ($cfgBss[$k] -is [System.Collections.IDictionary]) { foreach ($kk in @($cfgBss[$k].Keys)) { $block[$kk] = $cfgBss[$k][$kk] } }
+                $bss[$k] = $block
+            }
+        }
+        foreach ($p in @($bm.browser_specific_settings.PSObject.Properties)) {
+            if ($p.Value -is [System.Management.Automation.PSCustomObject]) {
+                if (-not ($bss[$p.Name] -is [System.Collections.IDictionary])) { $bss[$p.Name] = [ordered]@{} }
+                foreach ($q in @($p.Value.PSObject.Properties)) { $bss[$p.Name][$q.Name] = $q.Value }
+            }
+            else {
+                $bss[$p.Name] = $p.Value
+            }
+        }
+        $Config['Manifest']['BrowserSpecificSettings'] = $bss
+    }
+
     $manifestParams = @{
         BrowserConfig = $Config
         OutputPath    = $BrowserOutputDir

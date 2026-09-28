@@ -16,6 +16,9 @@
 
         BrowserSpecificSettings = @{
             gecko = @{
+                # Marcador de ejemplo: define el ID real en src/manifest.json
+                # (browser_specific_settings.gecko.id) o con Initialize -FirefoxExtensionId.
+                # Validate lo rechaza en Production.
                 id                = "extensionforge@ficticio.com"
                 strict_min_version = "109.0"
             }

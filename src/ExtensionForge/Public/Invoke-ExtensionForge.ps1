@@ -21,7 +21,10 @@ function Invoke-ExtensionForge {
         [string]$WorkspacePath = "$PWD",
 
         [ValidateSet('angular-mv3', 'angular-mv3-demo')]
-        [string]$Template = 'angular-mv3'
+        [string]$Template = 'angular-mv3',
+
+        # Solo para Initialize: ID de Firefox (gecko.id) que se escribe en src/manifest.json
+        [string]$FirefoxExtensionId
     )
 
     $ErrorActionPreference = 'Stop'
@@ -41,7 +44,9 @@ function Invoke-ExtensionForge {
                 if (-not $ok) { throw 'Doctor detectó problemas en el entorno.' }
             }
             'Initialize' {
-                Initialize-ExtensionForgeProject -WorkspacePath $WorkspacePath -Browser $Browser -Environment $Environment -Template $Template
+                $initParams = @{ WorkspacePath = $WorkspacePath; Browser = $Browser; Environment = $Environment; Template = $Template }
+                if ($PSBoundParameters.ContainsKey('FirefoxExtensionId')) { $initParams['FirefoxExtensionId'] = $FirefoxExtensionId }
+                Initialize-ExtensionForgeProject @initParams
             }
             'Build' {
                 Build-ExtensionForgeProject -WorkspacePath $WorkspacePath -Browser $Browser -Environment $Environment

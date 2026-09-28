@@ -25,7 +25,7 @@ Describe 'E2E real con Angular CLI y esbuild' -Tag 'Integration', 'E2E' -Skip:(-
         $base = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } elseif ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
         $script:Ws = Join-Path $base ('ExtForge_E2E_' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $script:Ws -Force | Out-Null
-        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws 6>$null
+        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws -FirefoxExtensionId 'e2e@extensionforge.test' 6>$null
 
         Push-Location $script:Ws
         try {

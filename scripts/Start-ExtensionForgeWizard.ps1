@@ -253,10 +253,28 @@ function Start-Wizard {
             $template = Get-MenuChoice -Title '🧩 PLANTILLA' -Options $templateOptions
         }
 
+        # ID de Firefox (gecko.id): obligatorio para firmar MV3 en AMO
+        $firefoxId = ''
+        if ($action -eq 'Initialize' -and $browser -in @('Firefox', 'All')) {
+            Show-Header
+            Write-Host '  🦊 ID DE FIREFOX (browser_specific_settings.gecko.id)' -ForegroundColor Cyan
+            Write-Host "     Formato: 'nombre@dominio' (p. ej. mi-extension@mi-dominio.dev) o '{GUID}'." -ForegroundColor DarkGray
+            Write-Host '     Pulsa ENTER para omitirlo (podrás definirlo después en src/manifest.json).' -ForegroundColor DarkGray
+            while ($true) {
+                $firefoxId = (Read-Host '  ID').Trim()
+                if (-not $firefoxId) { break }
+                $valid = ($firefoxId -match '^[a-zA-Z0-9-._]*@[a-zA-Z0-9-._]+$' -and $firefoxId.Length -le 80) -or
+                         ($firefoxId -match '^\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}$')
+                if ($valid -and $firefoxId -notmatch '@ficticio\.com$') { break }
+                Write-Host '  ⚠ ID no válido. Usa nombre@dominio o {GUID}.' -ForegroundColor Yellow
+            }
+        }
+
         $parts = @("Invoke-ExtensionForge", "-Action $action")
         if ($needsBrowser)     { $parts += "-Browser $browser" }
         if ($needsEnvironment) { $parts += "-Environment $environment" }
         if ($action -eq 'Initialize') { $parts += "-Template $template" }
+        if ($firefoxId)               { $parts += "-FirefoxExtensionId '$firefoxId'" }
 
         Execute-Command ($parts -join ' ')
     }

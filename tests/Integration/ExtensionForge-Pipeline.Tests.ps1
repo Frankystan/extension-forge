@@ -54,7 +54,7 @@ Describe 'Pipeline completo en Production (Chrome + Firefox)' -Tag 'Integration'
     }
 
     It 'Initialize crea el proyecto Angular MV3 desde la plantilla' {
-        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws -Browser All -Environment Production 6>$null
+        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws -Browser All -Environment Production -FirefoxExtensionId 'pipeline@extensionforge.test' 6>$null
         foreach ($rel in 'angular.json', 'package.json', 'src/manifest.json', 'src/background.ts', 'src/content.ts', 'scripts/build-extension.mjs') {
             Join-Path $script:Ws $rel | Should -Exist -Because "la plantilla angular-mv3 incluye $rel"
         }
@@ -63,7 +63,7 @@ Describe 'Pipeline completo en Production (Chrome + Firefox)' -Tag 'Integration'
     It 'Initialize no sobrescribe código del desarrollador en una segunda ejecución' {
         $component = Join-Path $script:Ws 'src' 'app' 'app.component.ts'
         Set-Content $component '// código propio del desarrollador'
-        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws -Browser All -Environment Production 6>$null
+        Initialize-ExtensionForgeProject -WorkspacePath $script:Ws -Browser All -Environment Production -FirefoxExtensionId 'pipeline@extensionforge.test' 6>$null
         Get-Content -Raw $component | Should -Match 'código propio del desarrollador'
     }
 
@@ -110,7 +110,8 @@ Describe 'Pipeline completo en Production (Chrome + Firefox)' -Tag 'Integration'
         @($m.background.scripts)                   | Should -Be @('background.js')
         $m.action.default_popup                    | Should -Be 'index.html' -Because 'Firefox MV3 usa action'
         $m.PSObject.Properties.Name                | Should -Not -Contain 'browser_action'
-        $m.browser_specific_settings.gecko.id      | Should -Not -BeNullOrEmpty
+        $m.browser_specific_settings.gecko.id      | Should -Be 'pipeline@extensionforge.test' -Because 'Initialize -FirefoxExtensionId lo fija en src/manifest.json'
+        $m.browser_specific_settings.gecko.strict_min_version | Should -Be '109.0' -Because 'las claves de la configuración no redefinidas se conservan'
         @($m.permissions)                          | Should -Contain 'contextMenus'
     }
 

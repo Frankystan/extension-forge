@@ -4,7 +4,7 @@ source: 'DM-ExtensionForge.md'
 assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.1.1'
+version: '1.1.2'
 created: '2026-09-24T20:07+02:00'
 updated: '2026-09-28T13:30+02:00'
 language: 'es-ES'
@@ -45,7 +45,7 @@ bom: false
     - 7.5 [Verificación realizada](#75-verificación-realizada)
 8. [Referencia del módulo ExtensionForge](#8-referencia-del-módulo-extensionforge)
     - 8.1 [Cmdlets públicos (7) - `src/ExtensionForge/Public/`](#81-cmdlets-públicos-7-src-extensionforge-public)
-    - 8.2 [Funciones privadas (7) - `src/ExtensionForge/Private/`](#82-funciones-privadas-7-src-extensionforge-private)
+    - 8.2 [Funciones privadas (8) - `src/ExtensionForge/Private/`](#82-funciones-privadas-7-src-extensionforge-private)
     - 8.3 [Configuración por capas - `src/ExtensionForge/Config/`](#83-configuración-por-capas-src-extensionforge-config)
     - 8.4 [Scripts - `scripts/`](#84-scripts-scripts)
     - 8.5 [Plantillas Angular MV3 - `src/ExtensionForge/Templates/`](#85-plantilla-angular-mv3-src-extensionforge-templates-angular-mv3)
@@ -308,7 +308,7 @@ Auditoría actual sobre `C:\Dev\extension-forge`. Clasificación por tipo:
 | `ExtensionForge.psd1` | Manifiesto (PowerShell 7.6.6+, 7 funciones exportadas). |
 | `ExtensionForge.psm1` | Loader que inyecta `Public/` y `Private/`. |
 | `Public/` (7) | `Invoke-ExtensionForge`, `Test-ExtensionForgeDoctor`, `Initialize-ExtensionForgeProject`, `Build-ExtensionForgeProject`, `Test-ExtensionForgePackage`, `New-ExtensionForgePackage`, `Install-ExtensionForgeDevelopment`. |
-| `Private/` (7) | `Get-ExtensionForgeConfiguration`, `Write-ExtensionForgeLog`, `Test-ExtensionForgeTool`, `New-ExtensionForgeManifest`, `Invoke-ExtensionForgeRuntimeBuild`, `Invoke-ExtensionForgeChromeAdapter`, `Invoke-ExtensionForgeFirefoxAdapter`. |
+| `Private/` (8) | `Get-ExtensionForgeConfiguration`, `Write-ExtensionForgeLog`, `Test-ExtensionForgeTool`, `Test-ExtensionForgeFirefoxId`, `New-ExtensionForgeManifest`, `Invoke-ExtensionForgeRuntimeBuild`, `Invoke-ExtensionForgeChromeAdapter`, `Invoke-ExtensionForgeFirefoxAdapter`. |
 | `Config/` (6) | `defaults.psd1`, `environments/{development,staging,production}.psd1`, `browsers/{chrome,firefox}.psd1`. |
 
 <a id="62-plantillas"></a>
@@ -441,9 +441,9 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 
 | Cmdlet | Parámetros | Descripción |
 |---|---|---|
-| `Invoke-ExtensionForge` | `-Action` (obligatorio, Position 0; `Doctor/Initialize/Build/Validate/Package/InstallDev`), `-Environment`, `-Browser`, `-WorkspacePath`, `-Template` | Orquestador central; propaga errores y registra éxito/fallo. |
+| `Invoke-ExtensionForge` | `-Action` (obligatorio, Position 0; `Doctor/Initialize/Build/Validate/Package/InstallDev`), `-Environment`, `-Browser`, `-WorkspacePath`, `-Template`, `-FirefoxExtensionId` (solo Initialize) | Orquestador central; propaga errores y registra éxito/fallo. |
 | `Test-ExtensionForgeDoctor` | `-WorkspacePath` | Verifica PowerShell 7.6.6+, Node 22+, Angular CLI 22+. Retorna `$true`/`$false`. |
-| `Initialize-ExtensionForgeProject` | `-WorkspacePath`, `-Browser`, `-Environment`, `-Template` (`angular-mv3`/`angular-mv3-demo`) | Scaffolding Angular + Angular Material MV3 (sin sobrescribir). Incluye guard anti-scaffold (impide crear el proyecto dentro del repo de ExtensionForge), migra el builder legacy a `@angular/build` y corrige `tsconfig.json` (module preserve). |
+| `Initialize-ExtensionForgeProject` | `-WorkspacePath`, `-Browser`, `-Environment`, `-Template` (`angular-mv3`/`angular-mv3-demo`), `-FirefoxExtensionId` | Scaffolding Angular + Angular Material MV3 (sin sobrescribir). Incluye guard anti-scaffold (impide crear el proyecto dentro del repo de ExtensionForge), migra el builder legacy a `@angular/build` y corrige `tsconfig.json` (module preserve). |
 | `Build-ExtensionForgeProject` | `-WorkspacePath`, `-Browser`, `-Environment` | `npx ng build` + esbuild + runtime por navegador. |
 | `Test-ExtensionForgePackage` | `-WorkspacePath`, `-Environment` | Valida `manifest_version=3` y CSP. Retorna `$true`/`$false`. |
 | `New-ExtensionForgePackage` | `-WorkspacePath`, `-Browser`, `-Environment` | Genera `.zip` (y `.xpi` para Firefox) en `dist/packages/`. |
@@ -451,13 +451,14 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 
 <a id="82-funciones-privadas-7-src-extensionforge-private"></a>
 
-### 8.2 Funciones privadas (7) - `src/ExtensionForge/Private/`
+### 8.2 Funciones privadas (8) - `src/ExtensionForge/Private/`
 
 | Función | Descripción |
 |---|---|
 | `Get-ExtensionForgeConfiguration` | Deep merge `defaults + environments/<env> + browsers/<browser>`. |
 | `Write-ExtensionForgeLog` | Log JSONL (`logs/dev.log`, `logs/production.log`) sin BOM. |
 | `Test-ExtensionForgeTool` | `$true`/`$false` si un ejecutable está en el PATH. |
+| `Test-ExtensionForgeFirefoxId` | Valida `gecko.id` (tipo email ≤ 80 o `{GUID}`) y detecta el marcador de ejemplo. Devuelve `IsValid`, `IsPlaceholder`, `Reason`. |
 | `New-ExtensionForgeManifest` | Genera `manifest.json` MV3 específico por navegador. `-ContentScripts` opcional (por defecto `<all_urls>` + `content.js`; array vacío omite la clave; exige `matches`). |
 | `Invoke-ExtensionForgeRuntimeBuild` | Copia `dist` → `dist/extension/<browser>` + manifest + adaptador. Pasa al generador los `content_scripts` de `src/manifest.json`. |
 | `Invoke-ExtensionForgeChromeAdapter` | Garantiza `background.js` (Service Worker). |
@@ -691,7 +692,7 @@ flowchart LR
 - ~~Implementar publicación real a tiendas~~ ✅ Existe `Publish-ExtensionForgeStore.ps1` (credenciales por variables de entorno). Pendiente: paquete explícito en lugar del ZIP más reciente (P-03).
 - ~~Completar tests de integración~~ ✅ Integración simulada (15) + E2E real (4) en CI. Pendiente: prueba de carga en navegador real (no automatizada).
 - ~~Completar manuales `development.md`, `production.md`, `adapters.md`, `release-process.md`~~ ✅ Añadidos el 2026-09-28 (§15).
-- Mejoras abiertas P-02…P-04, A-01…A-06 y CD-01 (P-01 resuelto): ver §15.3 y la sección 9 del checklist.
+- Mejoras abiertas P-03, P-04, A-01…A-06 y CD-01 (P-01 y P-02 resueltos): ver §15.3 y la sección 9 del checklist.
 
 ---
 
@@ -943,7 +944,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Ref. | Hallazgo | Documento |
 |---|---|---|
 | P-01 | ✅ Resuelto (2026-09-28): antes `content_scripts.matches` era siempre `<all_urls>` e ignoraba `src/manifest.json`; ahora se respetan los `content_scripts` del manifest base | `docs/production.md` |
-| P-02 | ID gecko `extensionforge@ficticio.com` es un marcador | `docs/production.md` |
+| P-02 | ✅ Resuelto (2026-09-28): ID de Firefox parametrizable (`-FirefoxExtensionId`, Wizard o `src/manifest.json`) y validado en `Validate` | `docs/production.md` |
 | P-03 | `Publish-ExtensionForgeStore` sube el ZIP Chrome más reciente por fecha | `docs/production.md` |
 | P-04 | CSP comprobada solo en el manifest, no en los bundles | `docs/production.md` |
 | A-01…A-06 | Ruta de import, nombres, compilación Angular en content script y estilos Material del adaptador | `docs/adapters.md` |
@@ -957,6 +958,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.1.2 | 2026-09-28 | Perplexity Computer | P-02 resuelto: ID de Firefox parametrizable y validado; nueva función privada `Test-ExtensionForgeFirefoxId`. |
 | 1.1.1 | 2026-09-28 | Perplexity Computer | P-01 resuelto: el build respeta `content_scripts` de `src/manifest.json`. |
 | 1.1.0 | 2026-09-28 | Perplexity Computer | §14 sesiones Perplexity, §15 auditoría con verificación ejecutada; actualizados §5, §6.4, §8.4, §9.4 y §11.4. |
 

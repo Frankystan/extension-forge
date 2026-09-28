@@ -100,7 +100,7 @@ El asistente te pregunta qué quieres hacer (Doctor, Initialize, Build, Validate
 Invoke-ExtensionForge -Action Doctor
 
 # 2. Crea el scaffolding (Angular + Angular Material + MV3) en la carpeta actual
-Invoke-ExtensionForge -Action Initialize -Browser All -Environment Development
+Invoke-ExtensionForge -Action Initialize -Browser All -Environment Development -FirefoxExtensionId 'mi-extension@mi-dominio.dev'
 
 # 3. Instala dependencias del proyecto generado
 npm install

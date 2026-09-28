@@ -62,6 +62,29 @@ function Test-ExtensionForgePackage {
             }
         }
 
+        # Firefox MV3: gecko.id obligatorio para firmar (AMO no lo asigna)
+        if ($dir.Name -eq 'firefox') {
+            $geckoId = $null
+            if ($manifest.browser_specific_settings -and $manifest.browser_specific_settings.gecko) {
+                $geckoId = [string]$manifest.browser_specific_settings.gecko.id
+            }
+            $idCheck = Test-ExtensionForgeFirefoxId -Id $geckoId
+            if (-not $idCheck.IsValid) {
+                Write-ExtensionForgeLog -Message "'firefox': browser_specific_settings.gecko.id $($idCheck.Reason)" -Level 'ERROR' @logParams
+                $issues++
+            }
+            elseif ($idCheck.IsPlaceholder) {
+                $msg = "'firefox': gecko.id '$geckoId' es el marcador de ejemplo. Define tu ID en src/manifest.json (browser_specific_settings.gecko.id) o con Initialize -FirefoxExtensionId."
+                if ($Environment -eq 'Production') {
+                    Write-ExtensionForgeLog -Message $msg -Level 'ERROR' @logParams
+                    $issues++
+                }
+                else {
+                    Write-ExtensionForgeLog -Message $msg -Level 'WARN' @logParams
+                }
+            }
+        }
+
         if ($Environment -eq 'Production') {
             $raw = Get-Content -Raw $manifestPath
             if ($raw -match 'unsafe-eval' -or $raw -match 'unsafe-inline') {

@@ -47,7 +47,7 @@ Ejecuta los comandos **en el directorio del proyecto de la extensión**, nunca d
 
 ```powershell
 # 1. Scaffold (plantilla base o demo ForgeNotes)
-Invoke-ExtensionForge -Action Initialize -Browser All -Environment Development
+Invoke-ExtensionForge -Action Initialize -Browser All -Environment Development -FirefoxExtensionId 'mi-extension@mi-dominio.dev'
 Invoke-ExtensionForge -Action Initialize -Template angular-mv3-demo -Browser All -Environment Development
 
 # 2. Dependencias (npm 12 puede exigir aprobar scripts nativos; ver problemas frecuentes)
@@ -97,11 +97,12 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 | `tests/Unit/Public` | Cmdlets exportados | ✅ |
 | `tests/Unit/Private` | Deep merge de `Get-ExtensionForgeConfiguration` (18) | ✅ |
 | `tests/Unit/Private` | `content_scripts` del manifest base en el build (7) | ✅ |
+| `tests/Unit/Private` | ID de Firefox: formato, build, Validate e Initialize (22) | ✅ |
 | `tests/Unit/Tools` | Compatibilidad PowerShell 7.6.6 + `Invoke-SemVerRelease` (12) | ✅ |
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
 | `tests/Integration` E2E | Toolchain real, Node 22 | ✅ 4/4 |
 
-Total sin E2E: 61 superadas, 0 fallidas, 4 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 83 superadas, 0 fallidas, 4 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
 El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real: prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 
