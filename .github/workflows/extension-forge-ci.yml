@@ -10,9 +10,6 @@ jobs:
   validate-and-build:
     name: Build & Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    env:
-      # $env:TEMP no existe en Linux; los tests y el paso Initialize lo usan
-      TEMP: ${{ runner.temp }}
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +33,12 @@ jobs:
           if ($v -lt [System.Management.Automation.SemanticVersion]'7.6.6') {
             Write-Error "ExtensionForge requiere PowerShell 7.6.6+ (actual: $v)"
           }
+
+      - name: 📂 Define TEMP (Linux)
+        # $env:TEMP no existe en Linux; los tests y el paso Initialize lo usan
+        if: runner.os != 'Windows'
+        shell: pwsh
+        run: Add-Content -Path $env:GITHUB_ENV -Value "TEMP=$env:RUNNER_TEMP"
 
       - name: 📦 Install Angular CLI (global)
         shell: pwsh
