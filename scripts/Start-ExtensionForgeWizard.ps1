@@ -92,7 +92,7 @@ function Show-CheatSheet {
                 Write-Host '  Adaptadores Shadow DOM   → ./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar' -ForegroundColor White
                 Write-Host '  CI local                 → ./scripts/Invoke-LocalCI.ps1' -ForegroundColor White
                 Write-Host '  CD local (producción)    → ./scripts/Invoke-LocalCD.ps1' -ForegroundColor White
-                Write-Host '  Versionado automático    → ./scripts/Invoke-SemVerRelease.ps1 -BumpType auto' -ForegroundColor White
+                Write-Host '  Versionado SemVer        → ./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun' -ForegroundColor White
                 Write-Host ''
                 Read-Host '  Pulsa ENTER para continuar'
             }
@@ -183,7 +183,7 @@ function Start-Wizard {
                 '🎨 AddAdapter (Sidebar / Overlay / Inline)' = 'AddAdapter'
                 '🧪 Invoke-LocalCI (pruebas pre-commit)'      = 'LocalCI'
                 '🚀 Invoke-LocalCD (empaquetado producción)'  = 'LocalCD'
-                '🏷 SemVer (versionado automático)'           = 'SemVer'
+                '🏷 SemVer (versionado explícito)'            = 'SemVer'
                 '⬅ Volver'                                    = 'Back'
             }
             Show-Header
@@ -204,7 +204,6 @@ function Start-Wizard {
                 }
                 'SemVer' {
                     $semverOptions = [ordered]@{
-                        'Automático (según logs)' = 'auto'
                         'Patch (bugfix)'           = 'patch'
                         'Minor (feature)'          = 'minor'
                         'Major (breaking)'         = 'major'

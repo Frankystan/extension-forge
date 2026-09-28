@@ -2,100 +2,133 @@
 .SYNOPSIS
     Generador de SemVer y Changelog de ExtensionForge.
 .DESCRIPTION
-    Analiza los logs JSONL (logs/dev.log) para decidir el salto de versión
-    (patch/minor/major), actualiza src/manifest.json y package.json, y añade una
-    entrada a CHANGELOG.md.
+    Lee src/manifest.json y package.json, exige que ambos compartan una versión
+    X.Y.Z válida, calcula el incremento solicitado (patch/minor/major) y lo aplica
+    a los dos archivos junto con una entrada nueva en CHANGELOG.md.
+
+    - No deduce la semántica del release a partir de logs históricos: el valor
+      'auto' se conserva solo por compatibilidad y equivale a 'patch' (con aviso).
+    - Aborta sin modificar nada si la versión es inválida, si las versiones no
+      coinciden o si CHANGELOG.md ya contiene la versión destino.
+    - Escritura transaccional: si falla una escritura, restaura lo ya escrito.
+    - Soporta -DryRun, -WhatIf y -Confirm.
+.OUTPUTS
+    [pscustomobject] con Current, Next, BumpType y Applied.
+.NOTES
+    Versión 2.2.0 — fusiona el script del repositorio (interfaz, 'auto', rutas)
+    con el candidato endurecido de la sesión Perplexity (validación y rollback).
 #>
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param(
     [string]$WorkspacePath = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
     [ValidateSet('auto', 'patch', 'minor', 'major')]
-    [string]$BumpType = 'auto',
+    [string]$BumpType = 'patch',
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
 
-$ManifestPath = Join-Path $WorkspacePath 'src\manifest.json'
-$PackagePath  = Join-Path $WorkspacePath 'package.json'
-$ChangelogPath = Join-Path $WorkspacePath 'CHANGELOG.md'
-$LogPath      = Join-Path $WorkspacePath 'logs\dev.log'
+$root          = (Resolve-Path -LiteralPath $WorkspacePath).Path
+$manifestPath  = Join-Path $root 'src' 'manifest.json'
+$packagePath   = Join-Path $root 'package.json'
+$changelogPath = Join-Path $root 'CHANGELOG.md'
 
-if (-not (Test-Path $ManifestPath)) {
-    Write-Error "No se encontró '$ManifestPath'. Debes estar en la raíz del proyecto."
-    exit 1
+if ($BumpType -eq 'auto') {
+    Write-Warning "BumpType 'auto' está obsoleto: se aplica 'patch'. Indica patch/minor/major de forma explícita."
+    $BumpType = 'patch'
 }
 
-# 1. Detección automática del tipo de salto según logs
-if ($BumpType -eq 'auto') {
-    $BumpType = 'patch'
-    if (Test-Path $LogPath) {
-        $logText = Get-Content -Raw $LogPath
-        if ($logText -match '"Action"\s*:\s*"Initialize"') {
-            $BumpType = 'major'
-        }
-        elseif ($logText -match '"Action"\s*:\s*"Build"[\s\S]*?"Browser"\s*:\s*"All"') {
-            $BumpType = 'minor'
-        }
+foreach ($required in @($manifestPath, $packagePath)) {
+    if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+        throw "No existe '$required'. No se ha modificado ningún archivo."
     }
 }
 
-# 2. Leer versión actual
-$manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json
-$current = $manifest.version
-if (-not $current -or $current -notmatch '^(\d+)\.(\d+)\.(\d+)$') {
-    $current = '1.0.0'
+$manifestText = Get-Content -LiteralPath $manifestPath -Raw -Encoding utf8
+$packageText  = Get-Content -LiteralPath $packagePath  -Raw -Encoding utf8
+$manifest     = $manifestText | ConvertFrom-Json -AsHashtable
+$package      = $packageText  | ConvertFrom-Json -AsHashtable
+
+$versionPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$'
+$current = [string]$manifest['version']
+$m = [regex]::Match($current, $versionPattern)
+if (-not $m.Success) {
+    throw "Versión de src/manifest.json inválida ('$current'): se exige X.Y.Z sin sufijos. No se ha modificado ningún archivo."
+}
+if ([string]$package['version'] -ne $current) {
+    throw "package.json ('$($package['version'])') y src/manifest.json ('$current') deben compartir la versión actual. No se ha modificado ningún archivo."
 }
 
-$major = [int]$Matches[1]
-$minor = [int]$Matches[2]
-$patch = [int]$Matches[3]
-
+$major = [long]$m.Groups[1].Value
+$minor = [long]$m.Groups[2].Value
+$patch = [long]$m.Groups[3].Value
 switch ($BumpType) {
     'major' { $major++; $minor = 0; $patch = 0 }
     'minor' { $minor++; $patch = 0 }
     'patch' { $patch++ }
 }
-$newVersion = "$major.$minor.$patch"
-$date = (Get-Date).ToString('yyyy-MM-dd')
+$next = "$major.$minor.$patch"
+
+$oldChangelog = if (Test-Path -LiteralPath $changelogPath) { Get-Content -LiteralPath $changelogPath -Raw -Encoding utf8 } else { '' }
+if ($oldChangelog -match "(?m)^## \[$([regex]::Escape($next))\]") {
+    throw "CHANGELOG.md ya contiene la versión $next. No se ha modificado ningún archivo."
+}
+
+$result = [pscustomobject]@{ Current = $current; Next = $next; BumpType = $BumpType; Applied = $false }
+Write-Host "  Incremento propuesto: $current → $next ($BumpType)" -ForegroundColor Yellow
 
 if ($DryRun) {
-    Write-Host "  [DryRun] $current → $newVersion ($BumpType)" -ForegroundColor Yellow
-    return
+    Write-Host '  [DryRun] No se ha modificado ningún archivo.' -ForegroundColor Yellow
+    return $result
+}
+if (-not $PSCmdlet.ShouldProcess($root, "Actualizar manifest.json, package.json y CHANGELOG.md a $next")) {
+    return $result
 }
 
-# 3. Actualizar manifest.json
-$manifest.version = $newVersion
-$manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath -Encoding utf8
-Write-Host "  → src/manifest.json actualizado a $newVersion" -ForegroundColor Green
-
-# 4. Actualizar package.json (si existe)
-if (Test-Path $PackagePath) {
-    $pkg = Get-Content -Raw $PackagePath | ConvertFrom-Json
-    if ($null -ne $pkg.version) {
-        $pkg.version = $newVersion
-        $pkg | ConvertTo-Json -Depth 10 | Set-Content -Path $PackagePath -Encoding utf8
-        Write-Host "  → package.json actualizado a $newVersion" -ForegroundColor Green
-    }
+$manifest['version'] = $next
+$package['version']  = $next
+$entry = "## [$next] - $((Get-Date).ToString('yyyy-MM-dd'))`n`n- Pendiente: describir los cambios verificados antes de publicar.`n"
+$safeEntry = $entry.Replace('$', '$$')
+if ($oldChangelog -match '(?m)^## \[Unreleased\]') {
+    # La versión nueva se inserta DEBAJO del bloque Unreleased (antes de la siguiente versión).
+    $newChangelog = [regex]::Replace($oldChangelog, '(?ms)^(## \[Unreleased\].*?)(?=^## \[|\z)', ('$1' + "`n" + $safeEntry + "`n"), 1)
 }
-
-# 5. Añadir entrada a CHANGELOG.md
-$entry = "`n## [$newVersion] - $date`n"
-$entry += "- Versión generada por ExtensionForge (bump: $BumpType).`n"
-
-if (Test-Path $ChangelogPath) {
-    $existing = Get-Content -Raw $ChangelogPath
-    if ($existing -match '(?m)^#\s*Changelog\s*$') {
-        $existing = [regex]::Replace($existing, '(?m)^#\s*Changelog\s*$\r?\n', "# Changelog`n$entry", 1)
-    }
-    else {
-        $existing = "# Changelog`n$entry" + $existing
-    }
-    Set-Content -Path $ChangelogPath -Value $existing -Encoding utf8
+elseif ($oldChangelog -match '(?m)^# Changelog\s*\r?\n') {
+    $newChangelog = [regex]::Replace($oldChangelog, '(?m)^(# Changelog\s*\r?\n)', ('$1' + "`n" + $safeEntry + "`n"), 1)
+}
+elseif ([string]::IsNullOrWhiteSpace($oldChangelog)) {
+    $newChangelog = "# Changelog`n`n$entry"
 }
 else {
-    Set-Content -Path $ChangelogPath -Value "# Changelog`n$entry" -Encoding utf8
+    $newChangelog = "# Changelog`n`n$entry`n$oldChangelog"
 }
-Write-Host "  → CHANGELOG.md actualizado" -ForegroundColor Green
 
-Write-Host "  ✅ Versión incrementada a $newVersion ($BumpType)." -ForegroundColor Green
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$existedChangelog = Test-Path -LiteralPath $changelogPath
+$targets = @(
+    @{ Path = $manifestPath;  Previous = $manifestText; Next = ($manifest | ConvertTo-Json -Depth 100) + "`n" }
+    @{ Path = $packagePath;   Previous = $packageText;  Next = ($package  | ConvertTo-Json -Depth 100) + "`n" }
+    @{ Path = $changelogPath; Previous = $oldChangelog; Next = $newChangelog }
+)
+$written = [System.Collections.Generic.List[object]]::new()
+try {
+    foreach ($t in $targets) {
+        [System.IO.File]::WriteAllText($t.Path, [string]$t.Next, $utf8NoBom)
+        $written.Add($t)
+    }
+}
+catch {
+    foreach ($t in $written) {
+        if ($t.Path -eq $changelogPath -and -not $existedChangelog) {
+            Remove-Item -LiteralPath $t.Path -Force -ErrorAction SilentlyContinue
+        }
+        else {
+            [System.IO.File]::WriteAllText($t.Path, [string]$t.Previous, $utf8NoBom)
+        }
+    }
+    throw
+}
+
+Write-Host "  ✅ Versión incrementada a $next ($BumpType): manifest.json, package.json y CHANGELOG.md." -ForegroundColor Green
+$result.Applied = $true
+return $result

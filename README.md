@@ -203,7 +203,7 @@ La configuración se compone por *deep merge* de tres capas (`Config/`):
 - **Compatibilidad PowerShell:** `./scripts/Test-ExtensionForgePowerShellCompatibility.ps1` valida todos los scripts contra el piso 7.6.6 (`-Normalize` autocorrige declaraciones de versión).
 - **CI local:** `./scripts/Invoke-LocalCI.ps1` (Pester + Doctor + dry-run de scaffold).
 - **CD local:** `./scripts/Invoke-LocalCD.ps1` (Git limpio → Pester → SemVer → Build Prod → Validate → Package).
-- **Versionado:** `./scripts/Invoke-SemVerRelease.ps1 -BumpType auto`.
+- **Versionado:** `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; el tipo `patch`/`minor`/`major` es explícito). Ver [docs/release-process.md](docs/release-process.md).
 - **CI remota:** `.github/workflows/extension-forge-ci.yml` (Ubuntu + Windows, Node 22/24).
 
 ---

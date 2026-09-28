@@ -1,12 +1,12 @@
 ---
 title: 'ExtensionForge - Angular Browser Extension'
 source: 'DM-ExtensionForge.md'
-assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness'
+assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.0.0'
+version: '1.1.0'
 created: '2026-09-24T20:07+02:00'
-updated: '2026-09-24T20:07+02:00'
+updated: '2026-09-28T13:30+02:00'
 language: 'es-ES'
 encoding: 'UTF-8'
 bom: false
@@ -66,6 +66,18 @@ bom: false
     - 11.4 [Pendientes para producción](#114-pendientes-para-producción)
 12. [Instrucciones de uso](#12-instrucciones-de-uso)
 13. [Ampliaciones de la sesión (operación y mantenimiento)](#13-ampliaciones-de-la-sesion)
+14. [Sesiones Perplexity del proyecto (hilo «ExtensionForge»)](#14-sesiones-perplexity)
+    - 14.1 [Registro de turnos](#141-registro-de-turnos)
+    - 14.2 [Mapeo de archivos históricos → arquitectura](#142-mapeo-historico)
+    - 14.3 [Reglas de operación](#143-reglas-de-operacion)
+    - 14.4 [CI/CD en ExtensionForge](#144-cicd)
+    - 14.5 [Artefactos Perplexity y su destino](#145-artefactos-perplexity)
+    - 14.6 [Lecciones sobre el acceso al código](#146-lecciones-acceso)
+15. [Auditoría repositorio ↔ sesión (2026-09-28)](#15-auditoria-2026-09-28)
+    - 15.1 [Comparación de homónimos y veredicto](#151-comparacion-homonimos)
+    - 15.2 [Verificación ejecutada](#152-verificacion-ejecutada)
+    - 15.3 [Hallazgos nuevos](#153-hallazgos-nuevos)
+16. [Registro de cambios del DM](#16-registro-cambios-dm)
 
 ---
 
@@ -82,7 +94,7 @@ bom: false
 | **Fuentes primarias** | `CLAUDE/dm-extensionforge-*.md` (10 archivos), Markdown de la raíz (README v2.0/v2.1, cheat sheet, checklists, documentación de sesiones). |
 | **Fuentes de contraste** | Archivos fuente PowerShell/PSD1/YAML en la raíz del proyecto (`perplexity_*`) y `artifacts.zip`. |
 | **Backups originales** | `PART 1.htm`, `PART 2.htm` (capturas SingleFile de sesiones Perplexity). |
-| **Hilos documentados** | 2 - "Angular Browser Extension" (Volumen 1) y "ExtensionForge" (Volumen 2, continuación explícita). |
+| **Hilos documentados** | 2 - "Angular Browser Extension" (Volumen 1) y "ExtensionForge" (Volumen 2, continuación explícita), más el hilo Perplexity «ExtensionForge» del Espacio del proyecto (§14). |
 | **Rango temporal cubierto** | 30 jul 2026 22:35 → 7 ago 2026 23:35 (turnos capturados) + sesiones posteriores hasta v2.1.0. |
 | **Artefactos únicos identificados** | 54 (16 en Vol. 1, 38 en Vol. 2). |
 
@@ -264,13 +276,14 @@ ExtensionForge/
 │  ├─ Add-ContentAdapter.ps1
 │  ├─ Publish-ExtensionForgeStore.ps1  # Publicación en Chrome Web Store y AMO
 │  └─ Test-ExtensionForgePowerShellCompatibility.ps1
-├─ tests/                              # Pester (Unit/Public, Unit/Tools)
+├─ tests/                              # Pester (Unit/{Public,Private,Tools}, Integration)
 ├─ .github/workflows/extension-forge-ci.yml
-├─ docs/                               # CheatSheet + carga en navegador + checklist migración
+├─ docs/                               # CheatSheet, carga en navegador, checklist, development, production, adapters, release-process
 ├─ examples/                           # extension-forge-demo (base) + forgenotes-demo (demo)
 ├─ .private/                           # Backup local (generate-backup.ps1, config.ini) + legado Perplexity (perx/)
 ├─ .agents/ .cursor/ .gemini/ .vscode/ # Config de agentes e IDE (MCP, reglas)
 ├─ README.md
+├─ CHANGELOG.md                        # Historial de ExtensionForge (Keep a Changelog)
 └─ DM-ExtensionForge.md                # Este documento
 ```
 
@@ -317,8 +330,8 @@ Auditoría actual sobre `C:\Dev\extension-forge`. Clasificación por tipo:
 
 ### 6.4 Tests, docs, ejemplos y CI
 
-- **Tests:** `tests/Unit/Public/ExtensionForge-Public.Tests.ps1`, `tests/Unit/Tools/ExtensionForge-PowerShellCompatibility.Tests.ps1`.
-- **Docs:** `docs/ExtensionForge-CheatSheet.md`, `docs/carga-extension-navegador.md`, `docs/perplexity_extension-forge-migration-checklist.v2.md`.
+- **Tests:** `tests/Unit/Public/ExtensionForge-Public.Tests.ps1`, `tests/Unit/Private/Get-ExtensionForgeConfiguration.Tests.ps1` (deep merge, 18), `tests/Unit/Tools/ExtensionForge-PowerShellCompatibility.Tests.ps1`, `tests/Unit/Tools/Invoke-SemVerRelease.Tests.ps1` (12), `tests/Integration/ExtensionForge-Pipeline.Tests.ps1` (simulada, 15) y `tests/Integration/ExtensionForge-Pipeline.E2E.Tests.ps1` (real, 4; `EXTFORGE_E2E=1`).
+- **Docs:** `docs/ExtensionForge-CheatSheet.md`, `docs/carga-extension-navegador.md`, `docs/perplexity_extension-forge-migration-checklist.v2.md`, `docs/development.md`, `docs/production.md`, `docs/adapters.md`, `docs/release-process.md`; `CHANGELOG.md` en la raíz.
 - **Ejemplos:** `examples/extension-forge-demo/` (base) y `examples/forgenotes-demo/` (demo).
 - **CI:** `.github/workflows/extension-forge-ci.yml`.
 
@@ -473,7 +486,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 | `Install-ExtensionForge.ps1` | Instala el módulo (`-Force` o `-Symlink`). |
 | `Invoke-LocalCI.ps1` | Pester + Doctor + dry-run de scaffold. |
 | `Invoke-LocalCD.ps1` | Git limpio → Pester → SemVer → Build/Validate/Package Producción. |
-| `Invoke-SemVerRelease.ps1` | Bump `patch/minor/major/auto` + `CHANGELOG.md`. |
+| `Invoke-SemVerRelease.ps1` | v2.2.0: bump explícito `patch/minor/major` (`auto` obsoleto = `patch`), validación estricta manifest/package, rollback, `-DryRun`/`-WhatIf` + `CHANGELOG.md`. |
 | `Add-ContentAdapter.ps1` | Adaptador Shadow DOM (`Sidebar/Overlay/Inline`). |
 | `Publish-ExtensionForgeStore.ps1` | Publica en Chrome Web Store (`chrome-webstore-upload`) y AMO (`web-ext sign`). |
 | `Test-ExtensionForgePowerShellCompatibility.ps1` | Valida que todos los scripts del repo cumplen el piso PowerShell 7.6.6 (`-Normalize` autocorrige las declaraciones de versión). |
@@ -554,10 +567,12 @@ Doctor → Initialize → npm install → Build → Validate → Test → Packag
 
 | Término | Definición |
 |---|---|
-| **Pester** | Framework de testing de PowerShell (suite v1.8.0 y `public-cmdlets.tests.v2.0.0`). |
+| **Pester** | Framework de testing de PowerShell. Suites actuales: `tests/Unit/{Public,Private,Tools}` e `tests/Integration` (simulada + E2E). |
 | **GitHub Actions CI** | Workflow multiplataforma (Ubuntu + Windows, Node 22/24, Angular CLI 22) con dry-run completo. |
 | **CD manual protegido** | Script gatekeeper (`git status --porcelain`) que ejecuta tests y empaqueta `.zip` en `dist`. |
 | **SemVer** | Versionado semántico `X.Y.Z` (patch/minor/major) + `CHANGELOG.md`. |
+| **Continuous Delivery protegida** | Modelo de ExtensionForge: el pipeline genera paquetes verificables, pero la publicación en tiendas requiere una decisión humana (§14.4). |
+| **E2E** | Prueba extremo a extremo con toolchain real (Angular CLI + esbuild + npm), activada con `EXTFORGE_E2E=1`. |
 
 ---
 
@@ -673,9 +688,10 @@ flowchart LR
 ### 11.4 Pendientes para producción
 
 - ~~Confirmar versiones reales~~ ✅ Confirmado: PowerShell 7.6.6+, Angular 22.2, Node 22+ (verificado por `Test-ExtensionForgePowerShellCompatibility.ps1`).
-- Implementar publicación real a tiendas (Chrome Web Store API / `web-ext sign` + AMO) con credenciales externas (sin secretos embebidos).
-- Completar tests de integración Chrome/Firefox.
-- Completar manuales `development.md`, `production.md`, `adapters.md`, `release-process.md`.
+- ~~Implementar publicación real a tiendas~~ ✅ Existe `Publish-ExtensionForgeStore.ps1` (credenciales por variables de entorno). Pendiente: paquete explícito en lugar del ZIP más reciente (P-03).
+- ~~Completar tests de integración~~ ✅ Integración simulada (15) + E2E real (4) en CI. Pendiente: prueba de carga en navegador real (no automatizada).
+- ~~Completar manuales `development.md`, `production.md`, `adapters.md`, `release-process.md`~~ ✅ Añadidos el 2026-09-28 (§15).
+- Mejoras abiertas P-01…P-04, A-01…A-06 y CD-01: ver §15.3 y la sección 9 del checklist.
 
 ---
 
@@ -768,6 +784,180 @@ Alternativas: `npm install-scripts approve --all`, o añadir manualmente a `pack
 ```
 
 > ✅ Verificado con Chrome for Testing 148 (`C:\chromeDriver\chrome.exe`). La extensión solo vive mientras dure ese proceso; para recargar tras cada `Build` conviene el método manual (↻ Recargar).
+
+---
+
+[⬆ Volver al índice](#indice)
+
+---
+
+<a id="14-sesiones-perplexity"></a>
+
+## 14. Sesiones Perplexity del proyecto (hilo «ExtensionForge»)
+
+Hilo de Perplexity Computer dentro del Espacio **ExtensionForge**, continuación del Volumen 2. Cubre la parte de la historia que el §11.1 marcaba como hueco (C11, C12): de v1.7.0 al módulo formal v2.1.0 y la fase de documentación y auditoría. Los artefactos de los turnos 1–23 se generaron como archivos de sesión; su código **no** se conserva en el repositorio: fue sustituido por la reconstrucción descrita en §7.4.
+
+<a id="141-registro-de-turnos"></a>
+
+### 14.1 Registro de turnos
+
+| Turnos | Fase | Contenido | Resultado actual |
+|---|---|---|---|
+| 1–3 | Calidad v1.7–v1.11 | CLI v1.7.0 + Pester v1.8.0; CI GitHub Actions v1.9.0 + CD local v1.10.0; SemVer/Changelog v1.11.0 (modo `auto` por logs) | Sustituidos por el módulo; `auto` retirado en SemVer v2.2.0 |
+| 4–6 | Adaptadores | `Add-ContentAdapter` v1.12.0 (Shadow DOM, Sidebar/Overlay/Inline); CLI v1.13.0 con `AddAdapter` y `BumpVersion` | Script en `scripts/`; las acciones no forman parte de `Invoke-ExtensionForge` v2.1.0 |
+| 7–8 | Inventario | Tabla de los 15 archivos de la fase 1 y mapeo a la arquitectura recomendada (§14.2) | Aplicado |
+| 9–11 | Módulo v2.0.0 | Manifiesto y loader, `Config/` por capas con deep merge, 7 cmdlets públicos | Reconstruido y corregido (bugs B1–B9) |
+| 12, 22–23 | Checklist | Checklist interactivo de migración (v1 y v2) | En `docs/`; actualizado el 2026-09-28 |
+| 13–15 | Frentes 1 y 2 | 5 micro-funciones privadas; `Install-ExtensionForge` (`-Symlink`) e `Invoke-LocalCI` | En el módulo y `scripts/` |
+| 16–21 | Frente 3 + DX | Esqueleto de tests públicos, README v2.0/v2.1, Cheat Sheet, Wizard v2.0.0 → v2.1.0 con glosario de 3 subopciones | En el repositorio |
+| 24–25 | Documentación | Documento de sesiones consolidado v2.0.0 | Fusionado en este DM (§14) |
+| 26–27 | Conceptos | Explicación de CI/CD (§14.4); guía CI/CD para Angular 22 + Material + Firebase | La guía Firebase es de **otro tipo de proyecto**: no se incorpora |
+| 28–38 | Acceso al código | Intentos por adjuntos, Drive, Espacio y conector GitHub (§14.6) | Resuelto clonando el repositorio |
+| 39–45 | Pendientes | Borradores de `release-process`, `development`, `production`, `adapters`, `CHANGELOG` y SemVer v2.2.0 candidato | Reescritos contra el código real el 2026-09-28 (§15) |
+| 46–47 | Auditoría | Comparación de homónimos y consolidación de este DM | §15 |
+
+<a id="142-mapeo-historico"></a>
+
+### 14.2 Mapeo de archivos históricos → arquitectura
+
+Complementa el §6.5 (`.private/perx/`, solo local: `.private` está en `.gitignore`).
+
+| Archivo original | Destino | Tratamiento |
+|---|---|---|
+| `New-ExtensionForgeScaffold.v1.0.0.ps1` | Histórico | Función absorbida por `Install-ExtensionForge.ps1` / `Initialize` |
+| `Update-ExtensionForgeBuild.v1.1.0.ps1` | Histórico | Lógica en `Build-ExtensionForgeProject.ps1` |
+| `Repair-ExtensionForgeModuleRoot.v1.1.1.ps1` | Migración | Solo como migración |
+| `Add-ExtensionForgeInstallDev.v1.2.0.ps1` | `Public/Install-ExtensionForgeDevelopment.ps1` | Refactorizado |
+| `Initialize-ExtensionForgeAngularMv3.v1.3.0.ps1` | `Public/Initialize-ExtensionForgeProject.ps1` | Refactorizado |
+| `Repair-InitializeExtensionForgeAngularMv3.v1.3.1.ps1` | Migración | Solo como migración |
+| `Invoke-ExtensionForgeUnifiedBuild.v1.4.0.ps1` | `Private/Invoke-ExtensionForgeRuntimeBuild.ps1` | Refactorizado |
+| `Upgrade-ExtensionForgeUnifiedWorkflow.v1.5.0.ps1` | Histórico | Migración |
+| `Invoke-ExtensionForgeValidatePackage.v1.6.0.ps1` | `Public/Test-ExtensionForgePackage.ps1` + `New-ExtensionForgePackage.ps1` | Validación y empaquetado separados |
+| `invoke-local-ci-v1.0.0.ps1` | `scripts/Invoke-LocalCI.ps1` | Renombrado y ampliado |
+| CLI v1.7.0 | Histórico | Sustituida por v1.13.0 y luego por el módulo |
+| Pester v1.8.0 | `tests/Unit/` | Dividido por área |
+| CI v1.9.0 | `.github/workflows/extension-forge-ci.yml` | Único workflow activo (D-003) |
+| CD local v1.10.0 | `scripts/Invoke-LocalCD.ps1` | Renombrado |
+| SemVer v1.11.0 | `scripts/Invoke-SemVerRelease.ps1` | Renombrado; v2.2.0 endurecida |
+| Content adapter v1.12.0 | `scripts/Add-ContentAdapter.ps1` | Renombrado |
+| CLI v1.13.0 | `Public/Invoke-ExtensionForge.ps1` | Base de la CLI final |
+| `extension-ci-cd-v1.0.0.yml` | Histórico | Evitar dos workflows activos |
+
+<a id="143-reglas-de-operacion"></a>
+
+### 14.3 Reglas de operación
+
+Complementan las decisiones D-001…D-008 (§4); no se repiten las ya cubiertas allí.
+
+| ID | Regla |
+|---|---|
+| R-01 | No ejecutar los scripts históricos secuencialmente sobre un mismo proyecto. |
+| R-02 | Probar siempre el módulo del repositorio (`Import-Module ./src/ExtensionForge/ExtensionForge.psd1 -Force`), no una copia instalada. |
+| R-03 | Ejecutar CI local y Pester antes de crear paquetes de producción. |
+| R-04 | Exigir árbol Git limpio antes del CD local. |
+| R-05 | Mantener `logs/`, `dist/`, `artifacts/`, `releases/`, `.backups/` y `.private/` fuera de Git. |
+| R-06 | No incrustar secretos: credenciales de tiendas solo por variables de entorno o GitHub Secrets. |
+| R-07 | Publicar en tiendas solo con aprobación humana explícita del paquete y la versión (acción irreversible). |
+| R-08 | Distinguir en la documentación lo verificado (ejecutado) de lo propuesto o pendiente. |
+| R-09 | No marcar una casilla del checklist por la mera existencia de un archivo: requiere prueba o revisión. |
+
+<a id="144-cicd"></a>
+
+### 14.4 CI/CD en ExtensionForge
+
+- **CI** (integración continua): `.github/workflows/extension-forge-ci.yml` en `push` y `pull_request` a `main`. Matriz Ubuntu + Windows × Node 22/24: comprobación PowerShell 7.6.6+, Angular CLI 22, Pester, Doctor y scaffold temporal; después el job `e2e` (Ubuntu, Node 22) con el pipeline real. `scripts/Invoke-LocalCI.ps1` reproduce la parte local antes del push.
+- **CD** (entrega continua protegida): `scripts/Invoke-LocalCD.ps1` → Git limpio → Pester → SemVer → Build/Validate/Package en Production → ZIP/XPI en `dist/packages/`. No publica.
+- **Publicación**: `scripts/Publish-ExtensionForgeStore.ps1`, paso aparte y manual (R-07). Detalle en `docs/production.md` y `docs/release-process.md`.
+
+En una frase: CI protege la integración del código; CD protege la creación de releases publicables; la publicación queda tras una barrera humana.
+
+<a id="145-artefactos-perplexity"></a>
+
+### 14.5 Artefactos Perplexity y su destino
+
+| Artefacto de sesión | Destino |
+|---|---|
+| `perplexity_extension-forge-migration-checklist.md` / `.v2.md` | `docs/perplexity_extension-forge-migration-checklist.v2.md` (versión del repositorio, más completa) |
+| `perplexity_extension-forge-session-documentation.v.2.0.0.md` | Fusionado en este DM (§14) |
+| `perplexity_extension-forge-commands-cheatsheet.md` | `docs/ExtensionForge-CheatSheet.md` |
+| `perplexity_readme.md.v.2.0.0/2.1.0` | `README.md` |
+| `perplexity_start-extension-forge-wizard.script.v.2.0.0/2.1.0` | `scripts/Start-ExtensionForgeWizard.ps1` |
+| `perplexity_extension-forge-{development,production,adapters,release-process}.v.2.2.0.md` | `docs/*.md`, reescritos contra el código real |
+| `perplexity_extension-forge-changelog.v.2.2.0.md` | `CHANGELOG.md`, reescrito con el historial Git real |
+| `perplexity_invoke-semver-release.v.2.2.0.ps1` | Fusionado en `scripts/Invoke-SemVerRelease.ps1` v2.2.0 |
+| `perplexity_export-extension-forge-review.v.1.0.0.ps1` | No se incorpora: era una solución de acceso temporal |
+| `perplexity_angular-material-firebase-cicd-guide.v.1.0.0.md` | No se incorpora: guía para aplicaciones web Angular + Firebase, no para ExtensionForge |
+
+<a id="146-lecciones-acceso"></a>
+
+### 14.6 Lecciones sobre el acceso al código
+
+- El conector GitHub permitía listar rutas y SHA, pero no devolvía el cuerpo de los archivos; tampoco funcionaron el enlace de carpeta de Drive ni la subida de ZIP.
+- La vía fiable es **clonar el repositorio público** (`git clone https://github.com/Frankystan/extension-forge.git`) en el entorno de trabajo del asistente.
+- Los borradores escritos sin leer el código (turnos 39–45) contenían datos obsoletos (Angular 17.3, YAML roto, ausencia de tests de integración). Por eso se reescribieron tras la auditoría: lección para R-08 y R-09.
+
+<a id="15-auditoria-2026-09-28"></a>
+
+## 15. Auditoría repositorio ↔ sesión (2026-09-28)
+
+Base: clon de `main` en el commit `78bbe06`. Cambios preparados en la rama `consolidacion/v2.2.0`.
+
+<a id="151-comparacion-homonimos"></a>
+
+### 15.1 Comparación de homónimos y veredicto
+
+| Archivo del repositorio | Homónimo de la sesión | Veredicto | Motivo |
+|---|---|---|---|
+| `scripts/Invoke-SemVerRelease.ps1` | `perplexity_invoke-semver-release.v.2.2.0.ps1` | **Fusionar** | El del repositorio tenía 2 errores reproducidos; el de la sesión rompía el contrato `auto` del Wizard y de LocalCD. Resultado: validación y rollback de la sesión + interfaz del repositorio. |
+| `docs/perplexity_extension-forge-migration-checklist.v2.md` | Checklist v1/v2 de la sesión | **Repositorio** | Más reciente: incluye tests privados e integración ya hechos. Solo se marcan los documentos y se añade la sección 9. |
+| `DM-ExtensionForge.md` | Documento de sesiones v2.0.0 | **Repositorio + fusión** | El DM está contrastado con el código; del documento de sesión se toman el registro de turnos, el mapeo, las reglas y CI/CD (§14). |
+| `docs/ExtensionForge-CheatSheet.md` | Cheat Sheet de la sesión | **Repositorio** | Requisitos 7.6.6+/Node 22+/Angular 22 correctos; solo se cambia `-BumpType auto`. |
+| `scripts/Start-ExtensionForgeWizard.ps1` | Wizard v2.1.0 (adjunto) | **Repositorio** | Añade import local `-Force`, `$PSScriptRoot` y plantilla demo; solo se retira la opción `auto`. |
+| `scripts/Invoke-LocalCI.ps1` | Adjunto | **Repositorio** | Añade el paso de compatibilidad PowerShell 7.6.6. |
+| `scripts/Install-ExtensionForge.ps1`, `Invoke-LocalCD.ps1`, `Publish-ExtensionForgeStore.ps1` | Adjuntos | **Repositorio** (idénticos) | Sin diferencias de contenido. |
+| `.gitignore` | Adjunto (16 líneas) | **Repositorio** (98 líneas) | Cubre `.private`, `.backups`, logs y builds. |
+| `examples/extension-forge-demo/{angular.json,package.json}` | Adjuntos (Angular 17.3) | **Repositorio** (Angular 22.2) | Los adjuntos eran una versión anterior. |
+| `docs/{development,production,adapters,release-process}.md`, `CHANGELOG.md` | Borradores v2.2.0 | **Nuevos, reescritos** | No existían; los borradores contenían datos obsoletos. |
+
+<a id="152-verificacion-ejecutada"></a>
+
+### 15.2 Verificación ejecutada
+
+Entorno: Linux, PowerShell 7.6.6, Pester 6.2.0, Node 22.23.3.
+
+| Prueba | Resultado |
+|---|---|
+| `Invoke-Pester ./tests` (sin E2E) | ✅ 54 superadas · 0 fallidas · 4 omitidas (E2E) |
+| `Invoke-Pester ./tests/Integration -Tag E2E` con `EXTFORGE_E2E=1` | ✅ 4/4: build Production, sin SourceMaps, Validate, ZIP con `manifest.json` en la raíz |
+| E2E con Node 20 | ❌ esperado: Angular CLI 22 exige Node 22.22.3+ |
+| SemVer 2.1.0 con versión `2.0` | ❌ calculaba `1.0.0 → 0.0.1` |
+| SemVer 2.1.0 con manifest `1.2.3` y package `9.9.9` | ❌ sobrescribía package sin avisar |
+| SemVer 2.2.0 (12 pruebas nuevas) | ✅ |
+
+No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje Angular de los adaptadores.
+
+<a id="153-hallazgos-nuevos"></a>
+
+### 15.3 Hallazgos nuevos
+
+| Ref. | Hallazgo | Documento |
+|---|---|---|
+| P-01 | `content_scripts.matches` siempre `<all_urls>`, ignora el de `src/manifest.json` (reproducido) | `docs/production.md` |
+| P-02 | ID gecko `extensionforge@ficticio.com` es un marcador | `docs/production.md` |
+| P-03 | `Publish-ExtensionForgeStore` sube el ZIP Chrome más reciente por fecha | `docs/production.md` |
+| P-04 | CSP comprobada solo en el manifest, no en los bundles | `docs/production.md` |
+| A-01…A-06 | Ruta de import, nombres, compilación Angular en content script y estilos Material del adaptador | `docs/adapters.md` |
+| CD-01 | `Invoke-LocalCD` solo avisa si no hay Git o `tests/` | `docs/release-process.md` |
+| DOC-01 | El aviso de `Add-ContentAdapter` remite a `entryPoints` de `angular.json`, pero el build usa esbuild sobre `content.ts` | `docs/adapters.md` |
+
+<a id="16-registro-cambios-dm"></a>
+
+## 16. Registro de cambios del DM
+
+| Versión | Fecha | Autor | Cambios |
+|---|---|---|---|
+| 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.1.0 | 2026-09-28 | Perplexity Computer | §14 sesiones Perplexity, §15 auditoría con verificación ejecutada; actualizados §5, §6.4, §8.4, §9.4 y §11.4. |
 
 ---
 

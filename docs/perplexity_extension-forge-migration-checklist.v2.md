@@ -52,10 +52,10 @@ Cmdlets oficiales disponibles en la consola del usuario.
 ## 🛠️ 5. Scripts de Orquestación y CI/CD (`scripts/` y `.github/`)
 Pipelines y envolturas para consumos externos.
 
-- [x] **`.github/workflows/extension-forge-ci.yml`**: Flujo GitHub Actions (Multi-OS, Node 20.x, Dry-runs). *(Creado en la fase 1, listo para mover a `.github/workflows/`)*.
-- [x] **`Invoke-SemVerRelease.ps1`**: Automatización de versión usando el log JSONL. *(Creado en la fase 1, listo para ser renombrado y movido a `scripts/`)*.
-- [x] **`Invoke-LocalCD.ps1`**: Despliegue seguro manual. *(Creado en la fase 1, listo para ser renombrado y movido a `scripts/`)*.
-- [x] **`Add-ContentAdapter.ps1`**: Inyector Shadow DOM (Sidebar, Overlay). *(Creado en la fase 1, listo para ser renombrado y movido a `scripts/`)*.
+- [x] **`.github/workflows/extension-forge-ci.yml`**: Flujo GitHub Actions (Ubuntu + Windows, Node 22.x/24.x, PowerShell 7.6.6+) con job `e2e` real.
+- [x] **`Invoke-SemVerRelease.ps1`**: v2.2.0 — incremento explícito `patch/minor/major` (`auto` obsoleto = `patch`), validación estricta, rollback y 12 pruebas en `tests/Unit/Tools/Invoke-SemVerRelease.Tests.ps1`.
+- [x] **`Invoke-LocalCD.ps1`**: Despliegue seguro manual (Git limpio → Pester → SemVer → Build/Validate/Package Production).
+- [x] **`Add-ContentAdapter.ps1`**: Inyector Shadow DOM (Sidebar, Overlay, Inline). Limitaciones A-01…A-06 en `docs/adapters.md`.
 - [x] **`Start-ExtensionForgeWizard.ps1`**: Menú Interactivo (Generador de comandos y Cheat Sheet).
 - [x] **`Install-ExtensionForge.ps1`**: Script que instala este módulo en el `$env:PSModulePath` del sistema o del usuario para que esté siempre disponible.
 - [x] **`Invoke-LocalCI.ps1`**: Script que corre localmente los mismos pasos que GitHub Actions antes del push.
@@ -75,11 +75,11 @@ Pruebas Pester.
 ## 📝 7. Documentación (`docs/`)
 - [x] **`ExtensionForge-CheatSheet.md`**: Hoja de referencia de comandos (Markdown).
 - [x] **`README.md`**: Fachada principal del repositorio y arquitectura.
-- [ ] **`development.md`**: (Pendiente) Guía de uso en caliente.
-- [ ] **`production.md`**: (Pendiente) Reglas estrictas de stores y CSP.
-- [ ] **`adapters.md`**: (Pendiente) Cómo usar el inyector Shadow DOM.
-- [ ] **`release-process.md`**: (Pendiente) Pasos para publicar una nueva versión con SemVer.
-- [ ] **`CHANGELOG.md`**: (Pendiente) Historial unificado.
+- [x] **`development.md`**: Guía de uso en caliente (requisitos, ciclo, pruebas, problemas frecuentes).
+- [x] **`production.md`**: Puertas de salida, CSP, permisos, artefactos y publicación en tiendas.
+- [x] **`adapters.md`**: Uso e integración del inyector Shadow DOM.
+- [x] **`release-process.md`**: Pasos para publicar una nueva versión con SemVer.
+- [x] **`CHANGELOG.md`**: Historial unificado (raíz del repositorio).
 
 ---
 
@@ -97,3 +97,16 @@ Mover scripts viejos a `scripts/archive/` o `scripts/migrations/`.
 - [x] Retirar `Invoke-ExtensionForgeValidatePackage.v1.6.0.ps1`.
 - [x] Retirar `extension-ci-cd-v1.0.0.yml`.
 - [x] Retirar CLI monólitos intermedios (v1.7.0, v1.13.0).
+
+---
+
+## 🔭 9. Siguientes mejoras (fuera del alcance de la migración)
+Detectadas en la auditoría del 2026-09-28; detalle en `docs/production.md` y `docs/adapters.md`.
+
+- [ ] **P-01**: `content_scripts.matches` configurable (hoy siempre `<all_urls>`).
+- [ ] **P-02**: ID gecko por proyecto y validación que rechace el marcador `ficticio`.
+- [ ] **P-03**: `Publish-ExtensionForgeStore.ps1` con paquete/versión explícitos (hoy elige el ZIP más reciente).
+- [ ] **P-04**: Validación CSP también sobre los bundles JS de Production.
+- [ ] **A-01/A-03**: Ruta de import del adaptador y compilación Angular (AOT/JIT) dentro del content script.
+- [ ] **CD-01**: `Invoke-LocalCD.ps1` debe abortar (no solo avisar) si no hay Git o no existe `tests/`.
+

@@ -28,7 +28,7 @@ Parámetros:
 | Adaptador Shadow DOM | `./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar` |
 | CI local | `./scripts/Invoke-LocalCI.ps1` |
 | CD local (producción) | `./scripts/Invoke-LocalCD.ps1` |
-| Versionado SemVer | `./scripts/Invoke-SemVerRelease.ps1 -BumpType auto` |
+| Versionado SemVer | `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; `patch`/`minor`/`major` explícito) |
 | Publicar en tiendas | `./scripts/Publish-ExtensionForgeStore.ps1 -Browser All` |
 
 ## 🎯 3. Flujo completo (de 0 a tiendas)
