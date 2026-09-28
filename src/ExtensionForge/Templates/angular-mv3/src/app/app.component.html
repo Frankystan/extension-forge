@@ -24,4 +24,37 @@
       <button mat-raised-button color="primary" type="button" (click)="ping()">Ping al background</button>
     </mat-card-actions>
   </mat-card>
+
+  <mat-card class="settings">
+    <mat-card-header>
+      <mat-card-title>Preferencias</mat-card-title>
+      <mat-card-subtitle>Guardadas en chrome.storage.local</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="setting">
+        <span id="theme-label">Tema</span>
+        <mat-button-toggle-group
+          aria-labelledby="theme-label"
+          hideSingleSelectionIndicator
+          [value]="prefs.settings().theme"
+          (change)="setTheme($event.value)">
+          <mat-button-toggle value="system">Sistema</mat-button-toggle>
+          <mat-button-toggle value="light">Claro</mat-button-toggle>
+          <mat-button-toggle value="dark">Oscuro</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      <mat-slide-toggle
+        class="setting"
+        [checked]="prefs.settings().notifications"
+        (change)="setNotifications($event.checked)">
+        Notificaciones
+      </mat-slide-toggle>
+      @if (prefs.error()) {
+        <p class="error">{{ prefs.error() }}</p>
+      }
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-button type="button" (click)="prefs.reset()">Restablecer</button>
+    </mat-card-actions>
+  </mat-card>
 </div>

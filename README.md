@@ -205,7 +205,7 @@ La configuración se compone por *deep merge* de tres capas (`Config/`):
 
 - **Compatibilidad PowerShell:** `./scripts/Test-ExtensionForgePowerShellCompatibility.ps1` valida todos los scripts contra el piso 7.6.6 (`-Normalize` autocorrige declaraciones de versión).
 - **CI local:** `./scripts/Invoke-LocalCI.ps1` (Pester + Doctor + dry-run de scaffold).
-- **Desarrollo:** `Start-ExtensionForgeDev.ps1` recompila al guardar y recarga extensión y pestañas; la plantilla trae `MessageService` con contrato de mensajes tipado. Ver [docs/dev-reload-messaging.md](docs/dev-reload-messaging.md).
+- **Desarrollo:** `Start-ExtensionForgeDev.ps1` recompila al guardar y recarga extensión y pestañas; la plantilla trae `MessageService` con contrato de mensajes tipado y `SettingsService` con preferencias en `chrome.storage.local`. Ver [docs/dev-reload-messaging.md](docs/dev-reload-messaging.md) y [docs/storage.md](docs/storage.md).
 - **CD local:** `./scripts/Invoke-LocalCD.ps1` desde el proyecto de la extensión (Git limpio → Pester → SemVer → Build Prod → Validate → Package). Aborta sin Git o sin `tests/` y revierte la versión si el build falla.
 - **Versionado:** `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; el tipo `patch`/`minor`/`major` es explícito). Ver [docs/release-process.md](docs/release-process.md).
 - **CI remota:** `.github/workflows/extension-forge-ci.yml` (Ubuntu + Windows, Node 22/24).

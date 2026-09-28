@@ -2,6 +2,17 @@
   padding: 16px;
   width: 360px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0;
 }
 
 .info, .ping { color: var(--mat-sys-on-surface-variant); font-size: 13px; }

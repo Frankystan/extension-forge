@@ -4,9 +4,9 @@ source: 'DM-ExtensionForge.md'
 assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.3.0'
+version: '1.3.1'
 created: '2026-09-24T20:07+02:00'
-updated: '2026-09-28T15:40+02:00'
+updated: '2026-09-28T16:40+02:00'
 language: 'es-ES'
 encoding: 'UTF-8'
 bom: false
@@ -498,7 +498,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 
 ### 8.5 Plantillas Angular MV3 - `src/ExtensionForge/Templates/`
 
-**`angular-mv3/` (base):** `package.json` (Angular 22.2 `^22.2.0` + Angular Material 22.2 `^22.2.0`, TypeScript `~6.0.3`, zoneless, + esbuild), `angular.json` (builder `@angular/build:application`, `outputHashing: none`, assets con `src/manifest.json`), `tsconfig*.json`, `src/index.html` (base href `./`), `src/main.ts` (standalone, zoneless), `src/background.ts`, `src/content.ts`, `src/manifest.json`, `src/styles.scss` (tema Material M3), `src/app/*` (componente standalone con `mat-toolbar`/`mat-card`/`mat-button` que llama a `GET_INFO`/`PING`), `src/app/models/messages.model.ts` + `messaging.ts` (contrato de mensajes tipado), `src/app/services/message.service.ts`, `src/dev/dev-reload.ts` (cliente de recarga), `scripts/build-extension.mjs`, `scripts/dev-reload-server.mjs`, `.gitignore`.
+**`angular-mv3/` (base):** `package.json` (Angular 22.2 `^22.2.0` + Angular Material 22.2 `^22.2.0`, TypeScript `~6.0.3`, zoneless, + esbuild), `angular.json` (builder `@angular/build:application`, `outputHashing: none`, assets con `src/manifest.json`), `tsconfig*.json`, `src/index.html` (base href `./`), `src/main.ts` (standalone, zoneless), `src/background.ts`, `src/content.ts`, `src/manifest.json`, `src/styles.scss` (tema Material M3), `src/app/*` (componente standalone con `mat-toolbar`/`mat-card`/`mat-button` que llama a `GET_INFO`/`PING`), `src/app/models/messages.model.ts` + `messaging.ts` (contrato de mensajes tipado), `src/app/services/message.service.ts`, preferencias en `chrome.storage.local` (`src/app/models/settings.model.ts`, `settings-store.ts`, `src/app/services/settings.service.ts`; tema y notificaciones en el popup), `src/dev/dev-reload.ts` (cliente de recarga), `scripts/build-extension.mjs`, `scripts/dev-reload-server.mjs`, `.gitignore`.
 
 **`angular-mv3-demo/` (ForgeNotes):** demo pedagógica con 4 superficies — Popup (`index.html`), SidePanel (`sidepanel.html`), Options (`options.html`) y Content Script (botón flotante) — servidas por un único bundle Angular que decide la vista según el atributo `data-view` del `<body>` (`app.component.ts`). `shared/` contiene `models.ts` (contrato de mensajes tipado) y `extension.service.ts` (envuelve `chrome.runtime`/`chrome.storage` con un `signal` reactivo + `storage.onChanged`). `background.ts` es el hub de mensajes y persistencia en `chrome.storage.local`. El `build-extension.mjs` compila `background.ts`/`content.ts` y genera `sidepanel.html`/`options.html` desde `index.html`. El popup abre el SidePanel con `chrome.sidePanel.open({ windowId })` directamente (el gesto se pierde vía `sendMessage`).
 
@@ -801,7 +801,7 @@ Implementa los puntos de desarrollo y mensajería del checklist `angular-extensi
 | Tipados compartidos | `src/app/models/messages.model.ts` (`MessageContract`) + `messaging.ts` | ✅ verificado |
 | Background → Popup (proactivo) | — | ⬜ pendiente |
 | Recarga de content scripts sin F5 | — | ⬜ pendiente |
-| Estado en `chrome.storage` (plantilla base) | — | ⬜ pendiente |
+| Estado en `chrome.storage` (plantilla base) | `SettingsService` + `settings.model.ts`/`settings-store.ts`; `provideAppInitializer` carga antes del primer render; `onInstalled` siembra/migra ([`docs/storage.md`](docs/storage.md)) | ✅ verificado en Chromium |
 
 Decisiones: la señal de recarga es un archivo escrito al final del build (no la vigilancia de todo `dist/`), para no recargar con la salida a medias; la lista de pestañas se pasa a `storage.local` antes de `runtime.reload()` porque `storage.session` se vacía; las respuestas viajan envueltas en `{ ok, data | error }` para que un handler que falla no deje el popup esperando. Firefox no se ha probado en el navegador (posible efecto de `upgrade-insecure-requests` sobre `ws://`).
 
@@ -977,6 +977,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.3.1 | 2026-09-28 | Perplexity Computer | §13.6 y §8.5: estado en `chrome.storage` en la plantilla base (`SettingsService`). |
 | 1.3.0 | 2026-09-28 | Perplexity Computer | §13.6: recarga en desarrollo (`Start-ExtensionForgeDev.ps1`, servidor y cliente WebSocket) y `MessageService` con contrato tipado en la plantilla base; actualizados §6.3, §8.4 y §8.5. |
 | 1.2.0 | 2026-09-28 | Perplexity Computer | Resueltos P-03, P-04, A-01…A-06, CD-01 y DOC-01: publicación por versión explícita, revisión de bundles en Validate, adaptadores con AOT y tema Material, CD que aborta y revierte. Nueva función privada `Find-ExtensionForgeUnsafeCode`. |
 | 1.1.2 | 2026-09-28 | Perplexity Computer | P-02 resuelto: ID de Firefox parametrizable y validado; nueva función privada `Test-ExtensionForgeFirefoxId`. |

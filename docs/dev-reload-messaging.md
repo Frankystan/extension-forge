@@ -82,7 +82,7 @@ Añadir un mensaje:
 
 Las respuestas viajan envueltas (`{ ok: true, data }` o `{ ok: false, error }`): un handler que lanza no deja el popup esperando; `send()` rechaza con `ExtensionMessageError`. El listener solo responde a los tipos del contrato y devuelve `false` con el resto, así que convive con otros listeners (por ejemplo, el de recarga).
 
-Pendiente: los mensajes proactivos Background → Popup (eventos) no forman parte todavía del servicio.
+Pendiente: los mensajes proactivos Background → Popup (eventos) no forman parte todavía del servicio. Las preferencias persistentes no pasan por mensajes: ver [storage.md](storage.md).
 
 ## Proyectos creados antes de esta versión
 

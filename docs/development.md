@@ -63,7 +63,7 @@ Invoke-ExtensionForge -Action InstallDev -Browser All
 ../extension-forge/scripts/Start-ExtensionForgeDev.ps1 -Browser Chrome
 ```
 
-Detalle de la recarga y del `MessageService` tipado: [dev-reload-messaging.md](dev-reload-messaging.md).
+Detalle de la recarga y del `MessageService` tipado: [dev-reload-messaging.md](dev-reload-messaging.md). Preferencias en `chrome.storage`: [storage.md](storage.md).
 
 Qué hace `Build` (según `Build-ExtensionForgeProject` e `Invoke-ExtensionForgeRuntimeBuild`):
 
@@ -109,9 +109,10 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 | `tests/Unit/Tools` | Compatibilidad PowerShell 7.6.6 + `Invoke-SemVerRelease` (12) | ✅ |
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
 | `tests/Integration` (simulada) | Recarga en desarrollo y contrato de mensajes (9) | ✅ |
+| `tests/Integration` (estática) | Preferencias en `chrome.storage` de la plantilla (5) | ✅ |
 | `tests/Integration` E2E | Toolchain real, Node 22, incluido un adaptador Sidebar compilado con AOT | ✅ 5/5 |
 
-Total sin E2E: 131 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 136 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
 El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real (el adaptador se verificó a mano en Chromium, ver [adapters.md](adapters.md)): prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 
