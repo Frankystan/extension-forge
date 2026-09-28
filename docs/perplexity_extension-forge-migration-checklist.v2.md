@@ -67,7 +67,7 @@ Pruebas Pester.
 
 - [x] **Tests Pester (Base)**: Validación de CLI antigua y Logging. *(Creado en fase 1, listo para dividir)*.
 - [x] **`tests/Unit/Public/*.tests.ps1`**: Tests base para validar los Cmdlets exportados.
-- [ ] **`tests/Unit/Private/*.tests.ps1`**: (Pendiente) Refactorizar tests para el Deep Merge (`Get-ExtensionForgeConfiguration`).
+- [x] **`tests/Unit/Private/*.tests.ps1`**: Tests del Deep Merge (`Get-ExtensionForgeConfiguration`): 18 pruebas en `tests/Unit/Private/Get-ExtensionForgeConfiguration.Tests.ps1` (Config real + fixtures aislados).
 - [ ] **`tests/Integration/*.tests.ps1`**: (Pendiente) Pruebas de punta a punta (Desde Initialize hasta Package).
 
 ---
