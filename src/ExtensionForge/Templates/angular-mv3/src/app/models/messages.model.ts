@@ -19,6 +19,10 @@ export interface MessageContract {
   PING: { request: void; response: { pong: true; at: string } };
   GET_INFO: { request: void; response: ExtensionInfo };
   ECHO: { request: { text: string }; response: { text: string; length: number } };
+  /** El content script avisa de que se ha cargado (el background emite PAGE_VISITED). */
+  CONTENT_READY: { request: void; response: { registered: boolean } };
+  /** Pide al background una notificación diferida (demuestra un evento proactivo). */
+  REQUEST_NOTIFICATION: { request: { text: string; delayMs: number }; response: { scheduled: boolean } };
 }
 
 export type MessageType = keyof MessageContract;
@@ -50,7 +54,13 @@ export type MessageHandlers = {
 };
 
 // Record<MessageType, true>: TypeScript obliga a listar aquí cada mensaje del contrato.
-const MESSAGE_TYPE_MAP: Record<MessageType, true> = { PING: true, GET_INFO: true, ECHO: true };
+const MESSAGE_TYPE_MAP: Record<MessageType, true> = {
+  PING: true,
+  GET_INFO: true,
+  ECHO: true,
+  CONTENT_READY: true,
+  REQUEST_NOTIFICATION: true,
+};
 const MESSAGE_TYPES: ReadonlySet<string> = new Set(Object.keys(MESSAGE_TYPE_MAP));
 
 /** Comprueba en runtime que un mensaje recibido pertenece al contrato. */

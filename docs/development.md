@@ -110,9 +110,10 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
 | `tests/Integration` (simulada) | Recarga en desarrollo y contrato de mensajes (9) | ✅ |
 | `tests/Integration` (estática) | Preferencias en `chrome.storage` de la plantilla (5) | ✅ |
+| `tests/Integration` (estática) | Eventos Background → Popup de la plantilla (7) | ✅ |
 | `tests/Integration` E2E | Toolchain real, Node 22, incluido un adaptador Sidebar compilado con AOT | ✅ 5/5 |
 
-Total sin E2E: 136 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 143 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
 El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real (el adaptador se verificó a mano en Chromium, ver [adapters.md](adapters.md)): prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 

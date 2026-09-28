@@ -45,7 +45,7 @@ Describe 'Plantilla: estado en chrome.storage' -Tag 'Integration', 'Storage' {
 
     It 'el background siembra o migra las preferencias en onInstalled' {
         $bg = Get-Src 'background.ts'
-        $bg | Should -Match "import \{ ensureSettings \} from './app/models/settings-store'"
+        $bg | Should -Match "import \{ ensureSettings[^}]*\} from './app/models/settings-store'"
         $bg | Should -Match 'onInstalled\.addListener\([\s\S]*?void ensureSettings\(\);'
     }
 

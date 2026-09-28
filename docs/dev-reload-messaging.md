@@ -6,6 +6,7 @@ Guía de las dos piezas de la plantilla `angular-mv3` para el día a día: la re
 
 - [Recarga en desarrollo](#recarga-en-desarrollo)
 - [MessageService y contrato de mensajes](#messageservice-y-contrato-de-mensajes)
+- [Eventos Background → Popup](#eventos-background--popup)
 - [Proyectos creados antes de esta versión](#proyectos-creados-antes-de-esta-versión)
 - [Verificación](#verificación)
 
@@ -82,7 +83,48 @@ Añadir un mensaje:
 
 Las respuestas viajan envueltas (`{ ok: true, data }` o `{ ok: false, error }`): un handler que lanza no deja el popup esperando; `send()` rechaza con `ExtensionMessageError`. El listener solo responde a los tipos del contrato y devuelve `false` con el resto, así que convive con otros listeners (por ejemplo, el de recarga).
 
-Pendiente: los mensajes proactivos Background → Popup (eventos) no forman parte todavía del servicio. Las preferencias persistentes no pasan por mensajes: ver [storage.md](storage.md).
+Las preferencias persistentes no pasan por mensajes: ver [storage.md](storage.md).
+
+## Eventos Background → Popup
+
+Además de petición → respuesta, el background puede avisar por iniciativa propia a las superficies abiertas (popup, options, side panel).
+
+| Archivo | Papel |
+|---|---|
+| `src/app/models/events.model.ts` | Contrato `EventContract` (tipo → payload), `ExtensionEvent`, `EVENTS_PORT` e `isExtensionEvent()`. `EVENT_TYPE_MAP` obliga a listar cada evento. |
+| `src/app/models/events.ts` | Sin Angular: `createEventHub()` para el background (`emit`, `connections`, `replay`) y `subscribeToEvents()` para las superficies (reconexión automática). |
+| `MessageService` | `events$` (todos los eventos, un único puerto compartido) y `on$(tipo)` (payload tipado + `at`). |
+
+Transporte: cada superficie abre un puerto con `chrome.runtime.connect({ name: 'extforge-events' })` y el background emite por los puertos abiertos. Con el popup cerrado no hay puertos y `emit()` no hace nada, sin los errores «Receiving end does not exist» de `runtime.sendMessage`. El background cierra los puertos que no vienen de páginas de la propia extensión (por ejemplo, de un content script).
+
+```typescript
+// Componente
+readonly lastVisit = toSignal(this.messages.on$('PAGE_VISITED'), { initialValue: null });
+this.messages.on$('NOTIFICATION').pipe(takeUntilDestroyed()).subscribe((n) => ...);
+
+// background.ts
+const events = createEventHub({ replay: ['PAGE_VISITED'] });
+events.emit('NOTIFICATION', { level: 'info', text: 'Hecho' });
+```
+
+Ejemplos de la plantilla:
+
+| Evento | Cuándo se emite |
+|---|---|
+| `PAGE_VISITED` | El content script envía `CONTENT_READY` al cargar una página; el background emite la URL y la pestaña (`sender.url`, sin permiso `tabs`). Con `replay`, el popup la recibe también al abrirse. |
+| `NOTIFICATION` | El popup pide `REQUEST_NOTIFICATION` y el background la emite 2 s después, solo si la preferencia `notifications` está activa. |
+
+Añadir un evento:
+
+1. Declara el tipo y su payload en `EventContract` y en `EVENT_TYPE_MAP`.
+2. Emítelo en el background con `events.emit('TIPO', payload)`.
+3. Suscríbete en la superficie con `on$('TIPO')`.
+
+Límites:
+
+- Los eventos emitidos con el popup cerrado se pierden; lo que deba sobrevivir va a `chrome.storage` ([storage.md](storage.md)).
+- El valor de `replay` vive en memoria: se pierde si el navegador detiene el service worker.
+- Los content scripts no reciben estos eventos (el canal es solo para páginas de la extensión); para ellos, `chrome.tabs.sendMessage`.
 
 ## Proyectos creados antes de esta versión
 
@@ -97,6 +139,7 @@ Pendiente: los mensajes proactivos Background → Popup (eventos) no forman part
 Hecha el 2026-09-28 sobre un proyecto real creado con `Initialize` (Angular 22, Node 22) y Chromium 1217:
 
 - Popup: `GET_INFO` y `PING` responden por `MessageService`; `ECHO` sin payload devuelve `{ ok: false, error }` en lugar de dejar el canal colgado.
+- Eventos: el popup abierto recibe `PAGE_VISITED` al abrir una web y `NOTIFICATION` a los 2 s (no antes); con las notificaciones desactivadas no llega ninguna; al reabrir el popup recibe la última página visitada; dos superficies abiertas reciben el mismo evento; tras detener el service worker (se pierde el `replay`), el popup se reconecta y sigue recibiendo eventos. Sin errores ni avisos en consola.
 - Recarga: escribir `.build-complete` recarga la extensión (el background se reconecta), la pestaña con content script se refresca y el content script se vuelve a inyectar.
 - `Start-ExtensionForgeDev.ps1`: build inicial, recompilación tras editar `app.component.html`, error claro con el puerto ocupado, `Ctrl+C` detiene el servidor.
 - Bundles: Development contiene el cliente; Staging y Production no, y `Validate` Production pasa.

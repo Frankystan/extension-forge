@@ -25,6 +25,29 @@
     </mat-card-actions>
   </mat-card>
 
+  <mat-card class="events">
+    <mat-card-header>
+      <mat-card-title>Eventos del background</mat-card-title>
+      <mat-card-subtitle>Llegan sin que el popup pregunte</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (lastVisit(); as v) {
+        <p class="visit">Última página: <span class="url">{{ v.url }}</span></p>
+      } @else {
+        <p class="info">Abre o recarga una página para ver el evento PAGE_VISITED.</p>
+      }
+      @for (n of notifications(); track n.at) {
+        <p class="notification">{{ n.text }}</p>
+      }
+      @if (!prefs.settings().notifications) {
+        <p class="info">Las notificaciones están desactivadas en Preferencias.</p>
+      }
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-button type="button" (click)="requestNotification()">Notificación en 2 s</button>
+    </mat-card-actions>
+  </mat-card>
+
   <mat-card class="settings">
     <mat-card-header>
       <mat-card-title>Preferencias</mat-card-title>
