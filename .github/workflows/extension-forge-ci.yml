@@ -1,0 +1,75 @@
+name: ExtensionForge CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate-and-build:
+    name: Build & Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [22.x, 24.x]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 💻 Setup PowerShell
+        shell: pwsh
+        run: |
+          $PSVersionTable
+          $v = $PSVersionTable.PSVersion
+          if ($v -lt [System.Management.Automation.SemanticVersion]'7.6.6') {
+            Write-Error "ExtensionForge requiere PowerShell 7.6.6+ (actual: $v)"
+          }
+
+      - name: 📦 Install Angular CLI (global)
+        shell: pwsh
+        run: npm install -g @angular/cli@22
+
+      - name: 🧪 Run Pester Tests
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable -Name Pester)) {
+            Install-Module -Name Pester -Force -SkipPublisherCheck -AcceptLicense -Scope CurrentUser
+          }
+          Import-Module Pester
+          $results = Invoke-Pester -Path "./tests" -PassThru -Output Detailed
+          if ($results.FailedCount -gt 0) {
+            Write-Error "Pester falló: $($results.FailedCount) test(s) fallidos."
+            exit 1
+          }
+
+      - name: 🏗️ Test Action: Doctor
+        shell: pwsh
+        run: |
+          Import-Module ./src/ExtensionForge/ExtensionForge.psd1 -Force
+          $ok = Test-ExtensionForgeDoctor -WorkspacePath $PWD
+          if (-not $ok) { exit 1 }
+
+      - name: 🏗️ Test Action: Initialize (Dry-Run / Scaffold)
+        shell: pwsh
+        run: |
+          Import-Module ./src/ExtensionForge/ExtensionForge.psd1 -Force
+          $TestDir = Join-Path $env:TEMP ("ExtForge_BuildTest_" + [guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $TestDir -Force | Out-Null
+          try {
+            Initialize-ExtensionForgeProject -WorkspacePath $TestDir -Browser All -Environment Development
+            if (-not (Test-Path (Join-Path $TestDir 'angular.json'))) { throw "Scaffold no generó angular.json" }
+            if (-not (Test-Path (Join-Path $TestDir 'src\manifest.json'))) { throw "Scaffold no generó src/manifest.json" }
+          }
+          finally {
+            Remove-Item $TestDir -Recurse -Force -ErrorAction SilentlyContinue
+          }

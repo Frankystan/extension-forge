@@ -1,0 +1,99 @@
+# =============================================================================
+# .gitignore — ExtensionForge (2026-09-28T04:18+02:00)
+# =============================================================================
+
+# ---------- ENTORNOS Y SECRETOS (NO commitear jamás) ----------
+.env
+.env.*
+!.env.example
+*.secret*
+.secret.local
+oauth2_client_secret.json
+typesenseApiKeys.txt
+serviceAccountKey.json
+*.pem
+*.key
+*.crt
+
+# ---------- DEPENDENCIAS Y BUILD ----------
+/node_modules
+/dist
+/shared/dist/
+/tmp
+/out-tsc
+/bazel-out
+/coverage
+/temp_pdf
+.angular/
+.sass-cache/
+
+# ---------- FIREBASE / EMULADORES / DATOS ----------
+.data
+.data/*
+data/
+emulators/
+firebase-export-*/
+.unknown
+.unknown/*
+unknown/
+
+# ---------- LOGS ----------
+*.log
+logs/
+
+# ---------- BACKUPS Y ARCHIVOS COMPRIMIDOS/BINARIOS ----------
+.backups
+.backups/*
+backups/
+*.rar
+*.zip
+*.7z
+*.lnk
+*.exe
+
+# ---------- ARTEFACTOS Y TEMPORALES ----------
+.trash
+.trash/*
+__screenshots__/
+.filetree
+/connect.lock
+testem.log
+/typings
+test-results/
+playwright-report/
+testResults.xml
+
+# ---------- IDE Y EDITORES ----------
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/*
+
+# ---------- VISUAL STUDIO CODE ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ---------- SISTEMA ----------
+.DS_Store
+Thumbs.db
+
+# ---------- OTROS ----------
+/documentation
+/implementations
+**/Backups/
+**/VSCodeBackups/
+**/profiles/
+*/public/*
+.private
+.private/*
+*/exclude.json
+*.lnk
+**.npm-cache/*
+.npm-cache/

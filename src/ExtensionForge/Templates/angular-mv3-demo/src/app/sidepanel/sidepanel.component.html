@@ -1,0 +1,24 @@
+<mat-toolbar color="primary">
+  <span>ForgeNotes — Panel lateral</span>
+</mat-toolbar>
+
+<div class="content">
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Nueva nota</mat-label>
+    <input matInput [(ngModel)]="text" (keyup.enter)="add()" />
+  </mat-form-field>
+  <button mat-raised-button color="primary" (click)="add()">Añadir</button>
+
+  <mat-list>
+    @for (note of service.state().notes; track note.id) {
+      <mat-list-item>
+        <span matListItemTitle>{{ note.text }}</span>
+        <button mat-icon-button matListItemMeta (click)="service.deleteNote(note.id)" aria-label="Eliminar nota">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-list-item>
+    } @empty {
+      <p class="empty">Sin notas todavía.</p>
+    }
+  </mat-list>
+</div>

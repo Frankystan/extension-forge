@@ -1,0 +1,21 @@
+<mat-toolbar color="primary">
+  <span>ForgeNotes</span>
+</mat-toolbar>
+
+<div class="content">
+  <mat-card>
+    <mat-card-content>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nota rápida</mat-label>
+        <input matInput [(ngModel)]="text" (keyup.enter)="add()" placeholder="Escribe y pulsa Enter…" />
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="add()">Añadir</button>
+    </mat-card-content>
+  </mat-card>
+
+  <p class="count">Notas guardadas: <strong>{{ service.state().notes.length }}</strong></p>
+
+  <button mat-stroked-button color="accent" (click)="service.openSidePanel()">
+    Abrir SidePanel →
+  </button>
+</div>

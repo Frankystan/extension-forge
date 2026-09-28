@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "ForgeNotes — ExtensionForge Demo",
+  "version": "1.0.0",
+  "description": "Demo: Popup, SidePanel, Options y comunicación entre superficies (Angular + Angular Material).",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "ForgeNotes"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "permissions": ["storage", "sidePanel", "activeTab"],
+  "host_permissions": ["<all_urls>"]
+}

@@ -1,0 +1,16 @@
+# Angular / Node
+/node_modules
+/dist
+/out-tsc
+*.log
+
+# ExtensionForge
+/logs
+/dist/packages
+/dist/extension
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
