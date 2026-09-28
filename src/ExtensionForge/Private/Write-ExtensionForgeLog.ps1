@@ -46,6 +46,12 @@ function Write-ExtensionForgeLog {
         'INFO'    { Write-Host "[$Action] $Message" -ForegroundColor Cyan }
         'SUCCESS' { Write-Host "[$Action] $Message" -ForegroundColor Green }
         'WARN'    { Write-Warning "[$Action] $Message" }
-        'ERROR'   { Write-Error "[$Action] $Message" }
+        'ERROR'   {
+            # Registrar un error no debe abortar al llamador: los cmdlets que usan
+            # $ErrorActionPreference = 'Stop' (p. ej. Test-ExtensionForgePackage)
+            # deben poder devolver $false tras loguear. Se respeta SilentlyContinue/Ignore.
+            $ea = if ($ErrorActionPreference -in 'Stop', 'Inquire') { 'Continue' } else { $ErrorActionPreference }
+            Write-Error "[$Action] $Message" -ErrorAction $ea
+        }
     }
 }

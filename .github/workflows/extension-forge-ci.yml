@@ -8,7 +8,7 @@ on:
 
 jobs:
   validate-and-build:
-    name: Build & Test on ${{ matrix.os }}
+    name: Build & Test on ${{ matrix.os }} · Node ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -77,4 +77,30 @@ jobs:
           }
           finally {
             Remove-Item $TestDir -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+  e2e:
+    name: E2E real (Angular + esbuild) on ubuntu-latest · Node 22.x
+    runs-on: ubuntu-latest
+    needs: validate-and-build
+    timeout-minutes: 20
+    env:
+      EXTFORGE_E2E: '1'
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: "🧪 Pester E2E: Initialize → npm install → Build → Validate → Package"
+        shell: pwsh
+        run: |
+          $env:TEMP = $env:RUNNER_TEMP
+          $results = Invoke-Pester -Path ./tests/Integration -Tag E2E -PassThru -Output Detailed
+          if ($results.FailedCount -gt 0 -or $results.PassedCount -eq 0) {
+            Write-Error "E2E falló o no se ejecutó: $($results.PassedCount) OK / $($results.FailedCount) fallos."
+            exit 1
           }
