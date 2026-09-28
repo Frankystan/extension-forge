@@ -1,4 +1,5 @@
 /// <reference types="chrome" />
+import { announceDevContentScript } from './dev/dev-reload';
 
 // Content Script: inyecta un botón flotante en la página visitada que,
 // al pulsarlo, pide al service worker que abra el SidePanel.
@@ -30,3 +31,6 @@ if (document.body) {
 } else {
   document.addEventListener('DOMContentLoaded', injectButton);
 }
+
+// Development: registra la pestaña para recargarla cuando se recargue la extensión
+if (__EXTFORGE_DEV_RELOAD_PORT__) announceDevContentScript();

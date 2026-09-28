@@ -1,6 +1,7 @@
 /// <reference types="chrome" />
 
 import { AppState, DEFAULT_SETTINGS, Message, Note, Settings, STORAGE_KEY } from './app/shared/models';
+import { startDevReload } from './dev/dev-reload';
 
 // El service worker es el "hub" de la extensión:
 // - centraliza el acceso a chrome.storage.local
@@ -85,3 +86,6 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
   })();
   return true; // mantiene el canal abierto para respuestas asíncronas
 });
+
+// Recarga automática en Development (eliminada del bundle en Staging/Production)
+if (__EXTFORGE_DEV_RELOAD_PORT__) void startDevReload();

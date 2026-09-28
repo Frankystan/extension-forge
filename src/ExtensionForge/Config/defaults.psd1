@@ -55,6 +55,8 @@
     # Comportamiento en tiempo de ejecución
     Runtime = @{
         EnableHotReload = $true
+        # Puerto del servidor de recarga (scripts/dev-reload-server.mjs, 127.0.0.1)
+        DevReloadPort   = 35729
         LogVerbosity    = "Debug"
         LogFile         = "dev.log"
     }

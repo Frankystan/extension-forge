@@ -4,9 +4,9 @@ source: 'DM-ExtensionForge.md'
 assistant: 'DeepSeek/deepseek-v4-pro/DeepSeek-Harness; Perplexity Computer (consolidación 2026-09-28)'
 status: 'Done'
 category: 'Master Document'
-version: '1.2.0'
+version: '1.3.0'
 created: '2026-09-24T20:07+02:00'
-updated: '2026-09-28T13:30+02:00'
+updated: '2026-09-28T15:40+02:00'
 language: 'es-ES'
 encoding: 'UTF-8'
 bom: false
@@ -322,9 +322,9 @@ Auditoría actual sobre `C:\Dev\extension-forge`. Clasificación por tipo:
 
 <a id="63-scripts"></a>
 
-### 6.3 Scripts - `scripts/` (8)
+### 6.3 Scripts - `scripts/` (9)
 
-`Start-ExtensionForgeWizard`, `Install-ExtensionForge`, `Invoke-LocalCI`, `Invoke-LocalCD`, `Invoke-SemVerRelease`, `Add-ContentAdapter`, `Publish-ExtensionForgeStore`, `Test-ExtensionForgePowerShellCompatibility`.
+`Start-ExtensionForgeWizard`, `Start-ExtensionForgeDev`, `Install-ExtensionForge`, `Invoke-LocalCI`, `Invoke-LocalCD`, `Invoke-SemVerRelease`, `Add-ContentAdapter`, `Publish-ExtensionForgeStore`, `Test-ExtensionForgePowerShellCompatibility`.
 
 <a id="64-tests-docs-ejemplos-ci"></a>
 
@@ -487,6 +487,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 | `Start-ExtensionForgeWizard.ps1` | **Wizard interactivo** (menús + glosario/cheat sheet). |
 | `Install-ExtensionForge.ps1` | Instala el módulo (`-Force` o `-Symlink`). |
 | `Invoke-LocalCI.ps1` | Pester + Doctor + dry-run de scaffold. |
+| `Start-ExtensionForgeDev.ps1` | Bucle de desarrollo: servidor de recarga + build Development + vigilancia de `src/`/`public/`; cada build recarga la extensión y las pestañas con content script (§13.6). |
 | `Invoke-LocalCD.ps1` | Git limpio → Pester → SemVer → Build/Validate/Package Producción. Aborta sin Git o sin `tests/` (salvo `-AllowNoGit`/`-AllowNoTests`) y restaura la versión si Build/Validate/Package fallan. `WorkspacePath` = directorio actual. |
 | `Invoke-SemVerRelease.ps1` | v2.2.0: bump explícito `patch/minor/major` (`auto` obsoleto = `patch`), validación estricta manifest/package, rollback, `-DryRun`/`-WhatIf` + `CHANGELOG.md`. |
 | `Add-ContentAdapter.ps1` | Adaptador Shadow DOM (`Sidebar/Overlay/Inline`): genera componente (`-ComponentName`, kebab-case, ShadowDom), adaptador (`-Width`, `-TargetSelector`), tema Material en `:host` y `scss.d.ts`. El content script se compila con AOT (`tsconfig.content.json` + ngc + linker). |
@@ -497,7 +498,7 @@ Resultado de la lectura exhaustiva de los 40 archivos fuente (`perplexity_*` v1.
 
 ### 8.5 Plantillas Angular MV3 - `src/ExtensionForge/Templates/`
 
-**`angular-mv3/` (base):** `package.json` (Angular 22.2 `^22.2.0` + Angular Material 22.2 `^22.2.0`, TypeScript `~6.0.3`, zoneless, + esbuild), `angular.json` (builder `@angular/build:application`, `outputHashing: none`, assets con `src/manifest.json`), `tsconfig*.json`, `src/index.html` (base href `./`), `src/main.ts` (standalone, zoneless), `src/background.ts`, `src/content.ts`, `src/manifest.json`, `src/styles.scss` (tema Material M3), `src/app/*` (componente standalone con `mat-toolbar`/`mat-card`/`mat-button`), `scripts/build-extension.mjs`, `.gitignore`.
+**`angular-mv3/` (base):** `package.json` (Angular 22.2 `^22.2.0` + Angular Material 22.2 `^22.2.0`, TypeScript `~6.0.3`, zoneless, + esbuild), `angular.json` (builder `@angular/build:application`, `outputHashing: none`, assets con `src/manifest.json`), `tsconfig*.json`, `src/index.html` (base href `./`), `src/main.ts` (standalone, zoneless), `src/background.ts`, `src/content.ts`, `src/manifest.json`, `src/styles.scss` (tema Material M3), `src/app/*` (componente standalone con `mat-toolbar`/`mat-card`/`mat-button` que llama a `GET_INFO`/`PING`), `src/app/models/messages.model.ts` + `messaging.ts` (contrato de mensajes tipado), `src/app/services/message.service.ts`, `src/dev/dev-reload.ts` (cliente de recarga), `scripts/build-extension.mjs`, `scripts/dev-reload-server.mjs`, `.gitignore`.
 
 **`angular-mv3-demo/` (ForgeNotes):** demo pedagógica con 4 superficies — Popup (`index.html`), SidePanel (`sidepanel.html`), Options (`options.html`) y Content Script (botón flotante) — servidas por un único bundle Angular que decide la vista según el atributo `data-view` del `<body>` (`app.component.ts`). `shared/` contiene `models.ts` (contrato de mensajes tipado) y `extension.service.ts` (envuelve `chrome.runtime`/`chrome.storage` con un `signal` reactivo + `storage.onChanged`). `background.ts` es el hub de mensajes y persistencia en `chrome.storage.local`. El `build-extension.mjs` compila `background.ts`/`content.ts` y genera `sidepanel.html`/`options.html` desde `index.html`. El popup abre el SidePanel con `chrome.sidePanel.open({ windowId })` directamente (el gesto se pierde vía `sendMessage`).
 
@@ -785,7 +786,24 @@ Alternativas: `npm install-scripts approve --all`, o añadir manualmente a `pack
 & "C:\chromeDriver\chrome.exe" --user-data-dir="$env:TEMP\forge-chrome-profile" --load-extension="C:\<tu-proyecto>\dist\extension\chrome"
 ```
 
-> ✅ Verificado con Chrome for Testing 148 (`C:\chromeDriver\chrome.exe`). La extensión solo vive mientras dure ese proceso; para recargar tras cada `Build` conviene el método manual (↻ Recargar).
+> ✅ Verificado con Chrome for Testing 148 (`C:\chromeDriver\chrome.exe`). La extensión solo vive mientras dure ese proceso; para recargar tras cada `Build` conviene el método manual (↻ Recargar) o `Start-ExtensionForgeDev.ps1` (§13.6).
+
+### 13.6 Recarga en desarrollo y MessageService (checklist «Angular MV3 Extension Setup»)
+
+Implementa los puntos de desarrollo y mensajería del checklist `angular-extension-checklist.md`, que figuraban como hechos pero no estaban en el repositorio. Guía completa: [`docs/dev-reload-messaging.md`](docs/dev-reload-messaging.md).
+
+| Punto del checklist | Implementación | Estado |
+|---|---|---|
+| Servidor WebSocket que vigila `dist/` y emite `RELOAD_EXTENSION` | `scripts/dev-reload-server.mjs` (plantillas): `ws` en `127.0.0.1:35729`, vigila `dist/extension/.build-complete` | ✅ verificado en Chromium |
+| Cliente en el background protegido para desarrollo | `src/dev/dev-reload.ts`: constante `__EXTFORGE_DEV_RELOAD_PORT__` (0 fuera de Development) + `installType === 'development'`; eliminado del bundle en Staging/Production | ✅ verificado |
+| Recarga de content scripts (F5) | Las pestañas se registran desde `content.ts`; tras `runtime.reload()` se refrescan con `chrome.tabs.reload()` | ✅ verificado |
+| MessageService | `src/app/services/message.service.ts` (`send`, `send$`, `sendWithOptions`) | ✅ verificado |
+| Tipados compartidos | `src/app/models/messages.model.ts` (`MessageContract`) + `messaging.ts` | ✅ verificado |
+| Background → Popup (proactivo) | — | ⬜ pendiente |
+| Recarga de content scripts sin F5 | — | ⬜ pendiente |
+| Estado en `chrome.storage` (plantilla base) | — | ⬜ pendiente |
+
+Decisiones: la señal de recarga es un archivo escrito al final del build (no la vigilancia de todo `dist/`), para no recargar con la salida a medias; la lista de pestañas se pasa a `storage.local` antes de `runtime.reload()` porque `storage.session` se vacía; las respuestas viajan envueltas en `{ ok, data | error }` para que un handler que falla no deje el popup esperando. Firefox no se ha probado en el navegador (posible efecto de `upgrade-insecure-requests` sobre `ws://`).
 
 ---
 
@@ -959,6 +977,7 @@ No verificado: carga real en Chrome/Firefox, publicación en tiendas y montaje A
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0.0 | 2026-09-24 | DeepSeek (auditoría) | Consolidación inicial y contraste con el código reconstruido (§1–§13). |
+| 1.3.0 | 2026-09-28 | Perplexity Computer | §13.6: recarga en desarrollo (`Start-ExtensionForgeDev.ps1`, servidor y cliente WebSocket) y `MessageService` con contrato tipado en la plantilla base; actualizados §6.3, §8.4 y §8.5. |
 | 1.2.0 | 2026-09-28 | Perplexity Computer | Resueltos P-03, P-04, A-01…A-06, CD-01 y DOC-01: publicación por versión explícita, revisión de bundles en Validate, adaptadores con AOT y tema Material, CD que aborta y revierte. Nueva función privada `Find-ExtensionForgeUnsafeCode`. |
 | 1.1.2 | 2026-09-28 | Perplexity Computer | P-02 resuelto: ID de Firefox parametrizable y validado; nueva función privada `Test-ExtensionForgeFirefoxId`. |
 | 1.1.1 | 2026-09-28 | Perplexity Computer | P-01 resuelto: el build respeta `content_scripts` de `src/manifest.json`. |

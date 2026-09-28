@@ -3,3 +3,6 @@
   width: 360px;
   box-sizing: border-box;
 }
+
+.info, .ping { color: var(--mat-sys-on-surface-variant); font-size: 13px; }
+.error { color: var(--mat-sys-error); font-size: 13px; }

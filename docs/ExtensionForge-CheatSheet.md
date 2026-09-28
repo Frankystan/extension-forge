@@ -27,6 +27,7 @@ Parámetros:
 | Instalar en desarrollo (symlink) | `./scripts/Install-ExtensionForge.ps1 -Symlink` |
 | Adaptador Shadow DOM | `./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar -ComponentName MiPanel -Width 360px` |
 | CI local | `./scripts/Invoke-LocalCI.ps1` |
+| Desarrollo con recarga | `./scripts/Start-ExtensionForgeDev.ps1 -Browser Chrome` (recompila al guardar y recarga la extensión) |
 | CD local (producción) | `./scripts/Invoke-LocalCD.ps1` |
 | Versionado SemVer | `./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun` (previsualiza; `patch`/`minor`/`major` explícito) |
 | Publicar en tiendas | `./scripts/Publish-ExtensionForgeStore.ps1 -Browser All -Version X.Y.Z` (`-WhatIf` para comprobar) |
@@ -42,6 +43,7 @@ npm install                                    # dependencias del proyecto Angul
 Invoke-ExtensionForge -Action Doctor           # salud del entorno
 Invoke-ExtensionForge -Action Initialize -Browser All -Environment Development
 Invoke-ExtensionForge -Action Build -Browser All -Environment Development
+./scripts/Start-ExtensionForgeDev.ps1 -Browser Chrome   # recarga automática al guardar (Ctrl+C para salir)
 ./scripts/Invoke-LocalCI.ps1                   # pruebas pre-commit
 ./scripts/Invoke-LocalCD.ps1                   # versiona + build prod + valida + empaqueta
 

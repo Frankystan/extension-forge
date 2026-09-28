@@ -91,6 +91,7 @@ function Show-CheatSheet {
                 Write-Host '  Instalación desarrollo   → ./scripts/Install-ExtensionForge.ps1 -Symlink' -ForegroundColor White
                 Write-Host '  Adaptadores Shadow DOM   → ./scripts/Add-ContentAdapter.ps1 -AdapterType Sidebar -ComponentName MiPanel' -ForegroundColor White
                 Write-Host '  CI local                 → ./scripts/Invoke-LocalCI.ps1' -ForegroundColor White
+                Write-Host '  Desarrollo con recarga   → ./scripts/Start-ExtensionForgeDev.ps1 -Browser Chrome' -ForegroundColor White
                 Write-Host '  CD local (producción)    → ./scripts/Invoke-LocalCD.ps1' -ForegroundColor White
                 Write-Host '  Versionado SemVer        → ./scripts/Invoke-SemVerRelease.ps1 -BumpType patch -DryRun' -ForegroundColor White
                 Write-Host ''

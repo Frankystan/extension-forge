@@ -31,6 +31,7 @@ Describe 'Find-ExtensionForgeUnsafeCode' -Tag 'Private', 'CSP' {
         @{ Rule = 'Function() con cadena';             Code = 'var g=Function("return this")();' }
         @{ Rule = 'setTimeout/setInterval con cadena'; Code = 'setTimeout("alert(1)",10);' }
         @{ Rule = 'import() remoto';                   Code = 'import("https://cdn.example.com/x.js");' }
+        @{ Rule = 'cliente de recarga de desarrollo';  Code = 'var d="[ExtensionForge][dev-reload]";' }
     ) {
         $f = @(Find-In (New-Runtime @{ 'content.js' = "console.log(1);`n$Code" }))
         $f.Count      | Should -Be 1

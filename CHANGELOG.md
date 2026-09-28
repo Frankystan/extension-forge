@@ -7,6 +7,8 @@ Las extensiones generadas llevan su propio `CHANGELOG.md`, gestionado por `scrip
 ## [Unreleased]
 
 ### Añadido
+- Recarga en desarrollo: `scripts/Start-ExtensionForgeDev.ps1` (compila en Development, vigila `src/`/`public/` y recompila) y, en las plantillas, `scripts/dev-reload-server.mjs` (WebSocket `ws` en `127.0.0.1`, vigila `dist/extension/.build-complete`) y `src/dev/dev-reload.ts` (el background recarga la extensión con `chrome.runtime.reload()` y refresca las pestañas con content script). Nueva clave `Runtime.DevReloadPort` (35729); `Build` escribe `.build-complete` y solo incluye el cliente en Development con `EnableHotReload`. `Validate` Production rechaza restos del cliente. Verificado en Chromium.
+- Plantilla `angular-mv3`: `MessageService` (`send`, `send$`, `sendWithOptions`), contrato `src/app/models/messages.model.ts` y utilidades `messaging.ts` (`sendExtensionMessage` con timeout y `ExtensionMessageError`, `registerMessageHandlers` con respuestas `{ ok, data | error }`). El popup de ejemplo usa `GET_INFO` y `PING`. `ws` pasa a `devDependencies`. `docs/dev-reload-messaging.md`. 10 pruebas nuevas.
 - `docs/development.md`, `docs/production.md`, `docs/adapters.md` y `docs/release-process.md`.
 - `tests/Unit/Tools/Invoke-SemVerRelease.Tests.ps1` (12 pruebas).
 - Este `CHANGELOG.md`.
@@ -20,6 +22,7 @@ Las extensiones generadas llevan su propio `CHANGELOG.md`, gestionado por `scrip
 - Checklist de migración: documentación marcada como completada.
 
 ### Corregido
+- El `background.ts` de la plantilla base devolvía `true` sin llamar nunca a `sendResponse`: cualquier `sendMessage` del popup se quedaba esperando.
 - P-03: `Publish-ExtensionForgeStore.ps1` publica la versión de `-Version` o `package.json` (o `-PackagePath`), comprueba la versión del manifest dentro del ZIP y en `dist/extension/firefox`, y aborta antes de subir nada si no cuadra; ya no elige el ZIP más reciente por fecha. Añade `-WhatIf`. 6 pruebas nuevas.
 - CD-01: `Invoke-LocalCD.ps1` aborta sin Git, con cambios, sin `tests/`, sin pruebas o con fallos (`-AllowNoGit`/`-AllowNoTests` explícitos), restaura manifest/package/CHANGELOG si Build/Validate/Package fallan, sustituye `Invoke-Pester -Quiet` (no admitido por Pester 6) por `-Output Minimal` y carga el módulo desde ExtensionForge. 5 pruebas nuevas.
 - `Add-ContentAdapter.ps1`, `Publish-ExtensionForgeStore.ps1`, `Invoke-LocalCD.ps1` e `Invoke-SemVerRelease.ps1` usan el directorio actual como `WorkspacePath` por defecto (antes, la raíz de ExtensionForge, que no es un proyecto de extensión).

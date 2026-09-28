@@ -5,6 +5,12 @@
     1. Ejecuta Angular CLI (npx ng build) con la configuración del entorno.
     2. Compila background.ts y content.ts con esbuild (scripts/build-extension.mjs).
     3. Genera dist/extension/<browser> con el manifest específico del navegador.
+    4. Escribe dist/extension/.build-complete: el servidor de recarga de desarrollo
+       (scripts/dev-reload-server.mjs) lo vigila para recargar la extensión.
+
+    Con Runtime.EnableHotReload (solo Development por defecto), background.js y
+    content.js incluyen el cliente de recarga (puerto Runtime.DevReloadPort). En
+    Staging/Production el cliente se elimina del bundle.
 #>
 function Build-ExtensionForgeProject {
     [CmdletBinding()]
@@ -61,14 +67,19 @@ function Build-ExtensionForgeProject {
         Write-ExtensionForgeLog -Message 'Compilando background.js y content.js (esbuild)...' @logParams
         Push-Location $WorkspacePath
         # build-extension.mjs lee EXTFORGE_ENVIRONMENT (Production → minify + ngDevMode=false)
-        $prevEnv = $env:EXTFORGE_ENVIRONMENT
+        $prevEnv  = $env:EXTFORGE_ENVIRONMENT
+        $prevPort = $env:EXTFORGE_DEV_RELOAD_PORT
         $env:EXTFORGE_ENVIRONMENT = $Environment
+        # Cliente de recarga: solo si el entorno lo habilita (nunca en Production)
+        $hotReload = [bool]$Config['Runtime']['EnableHotReload'] -and $Environment -ne 'Production'
+        $env:EXTFORGE_DEV_RELOAD_PORT = if ($hotReload) { [string]$Config['Runtime']['DevReloadPort'] } else { '0' }
         try {
             & node $esbuildScript $NgDist
             if ($LASTEXITCODE -ne 0) { throw "Falló la compilación de background/content (exit $LASTEXITCODE)." }
         }
         finally {
             $env:EXTFORGE_ENVIRONMENT = $prevEnv
+            $env:EXTFORGE_DEV_RELOAD_PORT = $prevPort
             Pop-Location
         }
     }
@@ -82,4 +93,9 @@ function Build-ExtensionForgeProject {
         Invoke-ExtensionForgeRuntimeBuild -WorkspacePath $WorkspacePath -Browser $b -Environment $Environment -NgDistPath $NgDist | Out-Null
         Write-ExtensionForgeLog -Message "Build de $b completado." -Level 'SUCCESS' @logParams
     }
+
+    # Marca de build completo (fuera de los runtimes: no entra en los ZIP)
+    $stamp = Join-Path $WorkspacePath $Config['Paths']['Output'] '.build-complete'
+    [ordered]@{ environment = $Environment; browsers = $browsers; at = (Get-Date).ToString('o') } |
+        ConvertTo-Json -Compress | Set-Content -Path $stamp -Encoding utf8
 }

@@ -10,9 +10,18 @@
     </mat-card-header>
     <mat-card-content>
       <p>Este popup es tu aplicación Angular. Empieza a programar desde <code>src/app/</code>.</p>
+      @if (info(); as i) {
+        <p class="info">{{ i.name }} v{{ i.version }} · {{ i.browser }}</p>
+      }
+      @if (lastPing()) {
+        <p class="ping">Background respondió: {{ lastPing() }}</p>
+      }
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="primary">Acción</button>
+      <button mat-raised-button color="primary" type="button" (click)="ping()">Ping al background</button>
     </mat-card-actions>
   </mat-card>
 </div>

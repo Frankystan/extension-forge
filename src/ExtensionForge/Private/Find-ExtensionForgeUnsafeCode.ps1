@@ -8,6 +8,8 @@
       - *.js / *.mjs (sin *.map): eval(...), new Function(...), Function('...'),
         setTimeout/setInterval con cadena, import('http...').
       - *.html: <script src="http(s)://..."> (script remoto).
+      - Restos del cliente de recarga de desarrollo (src/dev/dev-reload.ts), que
+        solo debe existir en builds de Development.
     Los comentarios /* ... */ y // ... no se eliminan: un falso positivo se resuelve
     en el código fuente, no desactivando la regla.
 .OUTPUTS
@@ -26,6 +28,7 @@ function Find-ExtensionForgeUnsafeCode {
         'Function() con cadena'       = '(?<![\w$.])(?<!\bnew\s+)Function\s*\(\s*[''"`]'
         'setTimeout/setInterval con cadena' = '(?<![\w$])set(?:Timeout|Interval)\s*\(\s*[''"`]'
         'import() remoto'             = '\bimport\s*\(\s*[''"`]https?://'
+        'cliente de recarga de desarrollo' = 'RELOAD_EXTENSION|\[ExtensionForge\]\[dev-reload\]'
     }
     $htmlRules = [ordered]@{
         'script remoto' = '<script\b[^>]*\bsrc\s*=\s*["'']?(?:https?:)?//'

@@ -58,13 +58,19 @@ Invoke-ExtensionForge -Action Build -Browser All -Environment Development
 
 # 4. Instrucciones de sideload (Chrome manual; Firefox con web-ext run)
 Invoke-ExtensionForge -Action InstallDev -Browser All
+
+# 5. Desarrollo con recarga automática: recompila al guardar y recarga la extensión
+../extension-forge/scripts/Start-ExtensionForgeDev.ps1 -Browser Chrome
 ```
+
+Detalle de la recarga y del `MessageService` tipado: [dev-reload-messaging.md](dev-reload-messaging.md).
 
 Qué hace `Build` (según `Build-ExtensionForgeProject` e `Invoke-ExtensionForgeRuntimeBuild`):
 
 1. `npx ng build --configuration <env> --output-hashing none --source-map=<bool> --optimization=<bool>`, con los valores de la configuración por capas.
 2. `node scripts/build-extension.mjs <salida>`: compila `background.ts` y `content.ts` con esbuild (formato IIFE).
 3. Por navegador: copia la salida a `dist/extension/<browser>`, genera el `manifest.json` específico y fusiona claves extra del `src/manifest.json` (por ejemplo `side_panel`, `options_ui`, `host_permissions`).
+4. Escribe `dist/extension/.build-complete`, la señal del servidor de recarga. En Development con `Runtime.EnableHotReload`, `background.js` y `content.js` incluyen el cliente de recarga.
 
 | Entorno | Configuración Angular | Optimización | SourceMaps | Log |
 |---|---|---|---|---|
@@ -76,7 +82,7 @@ Qué hace `Build` (según `Build-ExtensionForgeProject` e `Invoke-ExtensionForge
 
 ## Cargar la extensión en el navegador
 
-- **Chrome:** `chrome://extensions` → Modo de desarrollador → *Cargar descomprimida* → `dist/extension/chrome`. Tras cada build, *↻ Recargar*. Chrome estable 137+ ignora `--load-extension`; para línea de comandos usa Chrome for Testing, Canary o Dev. Detalle: [carga-extension-navegador.md](carga-extension-navegador.md).
+- **Chrome:** `chrome://extensions` → Modo de desarrollador → *Cargar descomprimida* → `dist/extension/chrome`. Tras cada build, *↻ Recargar* (o usa `Start-ExtensionForgeDev.ps1`, que recarga sola). Chrome estable 137+ ignora `--load-extension`; para línea de comandos usa Chrome for Testing, Canary o Dev. Detalle: [carga-extension-navegador.md](carga-extension-navegador.md).
 - **Firefox:** `about:debugging#/runtime/this-firefox` → *Cargar complemento temporal* → `dist/extension/firefox/manifest.json`, o `npx web-ext run --source-dir dist/extension/firefox` para recarga en vivo.
 
 ## Pruebas
@@ -98,13 +104,14 @@ $env:EXTFORGE_E2E = '1'; Invoke-Pester -Path ./tests/Integration -Tag E2E -Outpu
 | `tests/Unit/Private` | Deep merge de `Get-ExtensionForgeConfiguration` (18) | ✅ |
 | `tests/Unit/Private` | `content_scripts` del manifest base en el build (7) | ✅ |
 | `tests/Unit/Private` | ID de Firefox: formato, build, Validate e Initialize (22) | ✅ |
-| `tests/Unit/Private` | Código dinámico/remoto en bundles y `Validate` Production (15) | ✅ |
+| `tests/Unit/Private` | Código dinámico/remoto y restos del cliente de recarga en bundles, `Validate` Production (16) | ✅ |
 | `tests/Unit/Tools` | `Publish-ExtensionForgeStore` con `-WhatIf` (6), `Invoke-LocalCD` (5), `Add-ContentAdapter` (12) | ✅ |
 | `tests/Unit/Tools` | Compatibilidad PowerShell 7.6.6 + `Invoke-SemVerRelease` (12) | ✅ |
 | `tests/Integration` (simulada) | Pipeline con Angular CLI y esbuild simulados (15) | ✅ |
+| `tests/Integration` (simulada) | Recarga en desarrollo y contrato de mensajes (9) | ✅ |
 | `tests/Integration` E2E | Toolchain real, Node 22, incluido un adaptador Sidebar compilado con AOT | ✅ 5/5 |
 
-Total sin E2E: 121 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
+Total sin E2E: 131 superadas, 0 fallidas, 5 omitidas (las E2E, que requieren `EXTFORGE_E2E=1`).
 
 El E2E valida la build y los ZIP, **no** carga la extensión en un navegador real (el adaptador se verificó a mano en Chromium, ver [adapters.md](adapters.md)): prueba manualmente popup, background, content script, almacenamiento y mensajería en ambos navegadores.
 

@@ -5,7 +5,8 @@
     "start": "ng serve",
     "build": "ng build",
     "build:ext": "ng build --configuration production && node scripts/build-extension.mjs",
-    "watch:ext": "ng build --watch --configuration development"
+    "watch:ext": "ng build --watch --configuration development",
+    "dev:reload": "node scripts/dev-reload-server.mjs"
   },
   "private": true,
   "engines": {
@@ -32,6 +33,7 @@
     "@types/chrome": "^0.0.268",
     "esbuild": "^0.28.2",
     "sass": "^1.104.1",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "ws": "^8.18.3"
   }
 }

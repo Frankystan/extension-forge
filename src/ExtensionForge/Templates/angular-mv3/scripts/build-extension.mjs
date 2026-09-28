@@ -85,7 +85,12 @@ const common = {
   logLevel: 'info',
   legalComments: 'none',
   minify: production,
-  define: production ? { ngDevMode: 'false' } : {},
+  define: {
+    ...(production ? { ngDevMode: 'false' } : {}),
+    // Puerto del servidor de recarga (Development + Runtime.EnableHotReload) o 0.
+    // Con 0 el cliente de src/dev/dev-reload.ts queda como código muerto y se elimina.
+    __EXTFORGE_DEV_RELOAD_PORT__: String(production ? 0 : Number(process.env.EXTFORGE_DEV_RELOAD_PORT ?? 0) || 0),
+  },
 };
 
 await build({ ...common, entryPoints: [path.join(root, 'src', 'background.ts')] });
